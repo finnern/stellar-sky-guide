@@ -27,36 +27,57 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
 
   // Request device orientation permission and setup
   const setupDeviceOrientation = async () => {
+    console.log("Setting up device orientation...");
+    
     if ('DeviceOrientationEvent' in window) {
-      const granted = await requestOrientationPermission();
-      setPermissionGranted(granted);
-      setHasOrientationSupport(true);
+      console.log("Device supports orientation events");
+      try {
+        const granted = await requestOrientationPermission();
+        console.log("Permission status:", granted);
+        setPermissionGranted(granted);
+        setHasOrientationSupport(true);
 
-      if (granted) {
-        const handleOrientation = (event: DeviceOrientationEvent) => {
-          if (event.alpha !== null) {
-            setDeviceOrientation(event.alpha);
-          }
-        };
+        if (granted) {
+          const handleOrientation = (event: DeviceOrientationEvent) => {
+            console.log("Orientation event received:", {
+              alpha: event.alpha,
+              beta: event.beta,
+              gamma: event.gamma
+            });
+            
+            if (event.alpha !== null) {
+              setDeviceOrientation(event.alpha);
+            }
+          };
 
-        window.addEventListener('deviceorientation', handleOrientation, true);
-        
+          window.addEventListener('deviceorientation', handleOrientation, true);
+          
+          toast({
+            title: "Orientation Tracking Active",
+            description: "Your device will now point to the ISS location.",
+          });
+
+          return () => {
+            window.removeEventListener('deviceorientation', handleOrientation, true);
+          };
+        } else {
+          console.log("Permission denied for orientation tracking");
+          toast({
+            title: "Permission Denied",
+            description: "Please enable motion sensors in your device settings to use this feature.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error setting up orientation:", error);
         toast({
-          title: "Orientation Tracking Active",
-          description: "Your device will now point to the ISS location.",
-        });
-
-        return () => {
-          window.removeEventListener('deviceorientation', handleOrientation, true);
-        };
-      } else {
-        toast({
-          title: "Permission Denied",
-          description: "Please enable motion sensors in your device settings to use this feature.",
+          title: "Setup Error",
+          description: "Failed to setup orientation tracking. Please try again.",
           variant: "destructive",
         });
       }
     } else {
+      console.log("Device does not support orientation events");
       setHasOrientationSupport(false);
       toast({
         title: "Device Not Supported",
@@ -84,6 +105,12 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
         </Button>
       )}
 
+      {!hasOrientationSupport && (
+        <p className="text-yellow-400 mb-4">
+          Your device doesn't support orientation tracking. The compass will show static directions only.
+        </p>
+      )}
+
       <div className="relative w-48 h-48 mx-auto">
         {/* Compass Rose */}
         <div className="absolute inset-0 rounded-full border-2 border-space-blue/30">
@@ -102,9 +129,9 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
             </div>
           ))}
           
-          {/* Direction Arrow */}
+          {/* Direction Arrow with smooth transition */}
           <div
-            className="absolute inset-0 transition-transform duration-300"
+            className="absolute inset-0 transition-transform duration-300 ease-out"
             style={{ transform: `rotate(${finalRotation}deg)` }}
           >
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1/2 flex flex-col items-center">
