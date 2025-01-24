@@ -58,7 +58,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       
       // Update trajectory
       positions.current.push(newPosition);
-      if (positions.current.length > 50) { // Keep last 50 positions
+      if (positions.current.length > 1200) {
         positions.current.shift();
       }
       trajectory.current.setLatLngs(positions.current);
@@ -77,8 +77,6 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       <style>
         {`
           .iss-marker {
-            font-size: 24px;
-            color: #33C3F0;
             cursor: pointer;
             animation: pulse-slow 2s infinite;
             display: flex;
@@ -112,6 +110,17 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
         `}
       </style>
       <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
+      <div className="text-center text-xs text-gray-400">
+        <a 
+          href="https://www.flaticon.com/free-icons/spacecraft" 
+          title="spacecraft icons"
+          className="hover:text-space-blue transition-colors"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Spacecraft icons created by Freepik - Flaticon
+        </a>
+      </div>
     </div>
   );
 };

@@ -1,7 +1,11 @@
 import L from 'leaflet';
 
 export const initializeMap = (container: HTMLElement): L.Map => {
-  const map = L.map(container).setView([52.52, 13.405], 3);
+  const map = L.map(container, {
+    zoomSnap: 0.5,
+    minZoom: 2,
+    maxZoom: 8
+  }).setView([0, 0], 2);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -15,9 +19,9 @@ export const initializeMap = (container: HTMLElement): L.Map => {
 export const createISSMarker = (map: L.Map): L.Marker => {
   const issIcon = L.divIcon({
     className: 'iss-marker',
-    html: '⊕',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
+    html: `<img src="/iss-icon.svg" alt="ISS" style="width: 100%; height: 100%;" />`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
   });
 
   return L.marker([0, 0], { icon: issIcon }).addTo(map);
