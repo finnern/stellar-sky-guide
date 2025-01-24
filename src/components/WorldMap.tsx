@@ -56,30 +56,31 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     try {
       console.log('Updating ISS position:', issLocation);
       
-      // Transform coordinates from EPSG:4326 (lat/lon) to EPSG:3857 (Web Mercator)
+      // Store coordinates in EPSG:4326 (lat/lon) format
       const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
-      const transformedCoord = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
-      const transformedPosition: [number, number] = [transformedCoord[0], transformedCoord[1]];
       
-      console.log('Transformed position:', transformedPosition);
+      // Transform coordinates for display
+      const transformedCoord = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
+      
+      console.log('Transformed position:', transformedCoord);
 
       // Update or create marker
       if (marker.current) {
         console.log('Updating existing marker');
         const source = marker.current.getSource();
         const feature = source.getFeatures()[0];
-        feature.getGeometry().setCoordinates(transformedPosition);
+        feature.getGeometry().setCoordinates(transformedCoord);
       } else {
         console.log('Creating new marker');
         marker.current = ISSMarker({ 
           map: map.current, 
-          position: transformedPosition
+          position: transformedCoord
         });
       }
       
       // Update trajectory
       positions.current.push({
-        coords: transformedPosition,
+        coords: newPosition, // Store original lat/lon coordinates
         timestamp: Date.now()
       });
 
@@ -106,7 +107,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       // Center map on ISS if it's the first position
       if (isFirstPosition.current) {
         console.log('First position - centering map');
-        map.current.getView().setCenter(transformedPosition);
+        map.current.getView().setCenter(transformedCoord);
         map.current.getView().setZoom(4);
         isFirstPosition.current = false;
       }
