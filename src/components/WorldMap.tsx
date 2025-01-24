@@ -60,7 +60,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
       
       // Transform coordinates for display
-      const transformedCoord = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
+      const transformedCoord = transform(newPosition, 'EPSG:4326', 'EPSG:3857') as [number, number];
       
       console.log('Transformed position:', transformedCoord);
 
@@ -80,7 +80,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       
       // Update trajectory
       positions.current.push({
-        coords: newPosition, // Store original lat/lon coordinates
+        coords: newPosition,
         timestamp: Date.now()
       });
 

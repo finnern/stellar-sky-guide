@@ -25,8 +25,8 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
     // Create line segments with fading colors
     for (let i = 0; i < positions.length - 1; i++) {
       // Transform coordinates from EPSG:4326 to EPSG:3857
-      const start = transform(positions[i].coords, 'EPSG:4326', 'EPSG:3857');
-      const end = transform(positions[i + 1].coords, 'EPSG:4326', 'EPSG:3857');
+      const start = transform(positions[i].coords, 'EPSG:4326', 'EPSG:3857') as [number, number];
+      const end = transform(positions[i + 1].coords, 'EPSG:4326', 'EPSG:3857') as [number, number];
       
       console.log(`Creating segment ${i} from`, start, 'to', end);
       
