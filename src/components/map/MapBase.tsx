@@ -1,5 +1,5 @@
-import React from 'react';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface MapBaseProps {
   container: HTMLElement;
@@ -14,12 +14,17 @@ const MapBase = ({ container }: MapBaseProps) => {
     zoom: 2
   });
 
-  // Add the dark theme tile layer
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // Add the dark theme tile layer with error handling
+  const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 8
   }).addTo(map);
+
+  // Add error handling for tile loading
+  tileLayer.on('tileerror', (error) => {
+    console.error('Tile loading error:', error);
+  });
 
   return map;
 };
