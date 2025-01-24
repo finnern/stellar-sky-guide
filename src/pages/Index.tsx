@@ -4,6 +4,7 @@ import { getISSLocation, calculateNextPass } from '../services/issLocation';
 import Countdown from '../components/Countdown';
 import LocationInput from '../components/LocationInput';
 import Compass from '../components/Compass';
+import WorldMap from '../components/WorldMap';
 import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
@@ -61,6 +62,8 @@ const Index = () => {
             <Countdown targetDate={nextPass} />
           )}
         </div>
+
+        <WorldMap issLocation={issLocation ?? null} />
 
         <div className="grid md:grid-cols-2 gap-8">
           {issLocation && userLocation && (
