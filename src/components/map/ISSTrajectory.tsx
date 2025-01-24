@@ -7,27 +7,40 @@ import { Map } from 'ol';
 
 interface ISSTrajectoryProps {
   map: Map;
-  positions: [number, number][];
+  positions: Array<{
+    coords: [number, number];
+    timestamp: number;
+  }>;
 }
 
 const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
   const source = new VectorSource();
   
   if (positions.length > 1) {
-    const feature = new Feature({
-      geometry: new LineString(positions),
-    });
+    // Create line segments with fading colors
+    for (let i = 0; i < positions.length - 1; i++) {
+      const segment = new Feature({
+        geometry: new LineString([
+          positions[i].coords,
+          positions[i + 1].coords
+        ]),
+      });
 
-    feature.setStyle(
-      new Style({
-        stroke: new Stroke({
-          color: 'rgba(51, 195, 240, 0.6)',
-          width: 2,
-        }),
-      })
-    );
+      // Calculate age as a fraction of 90 minutes (5400000 milliseconds)
+      const age = (Date.now() - positions[i].timestamp) / 5400000;
+      const opacity = Math.max(0, 1 - age);
 
-    source.addFeature(feature);
+      segment.setStyle(
+        new Style({
+          stroke: new Stroke({
+            color: `rgba(51, 195, 240, ${opacity})`,
+            width: 2,
+          }),
+        })
+      );
+
+      source.addFeature(segment);
+    }
   }
 
   const vectorLayer = new VectorLayer({

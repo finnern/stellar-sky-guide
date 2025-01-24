@@ -19,7 +19,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   const map = useRef<Map | null>(null);
   const marker = useRef<any>(null);
   const trajectory = useRef<any>(null);
-  const positions = useRef<[number, number][]>([]);
+  const positions = useRef<Array<{coords: [number, number], timestamp: number}>>([]);
 
   // Initialize map
   useEffect(() => {
@@ -72,11 +72,15 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       const feature = source.getFeatures()[0];
       feature.getGeometry().setCoordinates(transformedPosition);
       
-      // Update trajectory
-      positions.current.push(transformedPosition);
-      if (positions.current.length > 1200) {
-        positions.current.shift();
-      }
+      // Update trajectory with timestamp
+      positions.current.push({
+        coords: transformedPosition,
+        timestamp: Date.now()
+      });
+
+      // Keep only positions from the last 90 minutes
+      const ninetyMinutesAgo = Date.now() - 5400000;
+      positions.current = positions.current.filter(pos => pos.timestamp > ninetyMinutesAgo);
       
       // Remove old trajectory and create new one
       map.current.removeLayer(trajectory.current);
