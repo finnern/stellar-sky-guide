@@ -14,13 +14,17 @@ interface ISSTrajectoryProps {
 }
 
 const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
+  console.log('Creating trajectory with positions:', positions);
+  
   const source = new VectorSource();
   
   if (positions.length > 1) {
-    console.log('Creating trajectory with positions:', positions.length);
+    console.log('Creating line segments with', positions.length, 'positions');
     
     // Create line segments with fading colors
     for (let i = 0; i < positions.length - 1; i++) {
+      console.log(`Creating segment ${i} from`, positions[i].coords, 'to', positions[i + 1].coords);
+      
       const segment = new Feature({
         geometry: new LineString([
           positions[i].coords,
@@ -32,6 +36,8 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
       const currentTime = Date.now();
       const segmentAge = (currentTime - positions[i].timestamp) / 5400000; // 90 minutes
       const opacity = Math.max(0.1, 1 - segmentAge);
+      
+      console.log(`Segment ${i} age:`, segmentAge, 'opacity:', opacity);
 
       segment.setStyle(
         new Style({
@@ -46,6 +52,8 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
 
       source.addFeature(segment);
     }
+  } else {
+    console.warn('Not enough positions to create trajectory line');
   }
 
   const vectorLayer = new VectorLayer({
@@ -53,6 +61,7 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
     zIndex: 2, // Below ISS dot but above map
   });
 
+  console.log('Adding trajectory layer to map');
   map.addLayer(vectorLayer);
   return vectorLayer;
 };

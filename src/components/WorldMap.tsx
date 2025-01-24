@@ -29,23 +29,6 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     try {
       map.current = MapBase({ container: mapContainer.current });
       console.log('Map initialized');
-      
-      if (issLocation) {
-        console.log('Initial ISS position:', issLocation);
-        const position: [number, number] = [issLocation.longitude, issLocation.latitude];
-        const transformedCoord = transform(position, 'EPSG:4326', 'EPSG:3857');
-        const transformedPosition: [number, number] = [transformedCoord[0], transformedCoord[1]];
-        
-        marker.current = ISSMarker({ 
-          map: map.current, 
-          position: transformedPosition
-        });
-        
-        trajectory.current = ISSTrajectory({ 
-          map: map.current, 
-          positions: positions.current 
-        });
-      }
     } catch (error) {
       console.error('Map initialization error:', error);
       toast({
@@ -65,18 +48,34 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
   // Update ISS position and trajectory
   useEffect(() => {
-    if (!issLocation || !map.current || !marker.current) return;
+    if (!issLocation || !map.current) {
+      console.log('Skipping update - no issLocation or map:', { issLocation, map: !!map.current });
+      return;
+    }
 
     try {
       console.log('Updating ISS position:', issLocation);
+      
+      // Transform coordinates from EPSG:4326 (lat/lon) to EPSG:3857 (Web Mercator)
       const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
       const transformedCoord = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
       const transformedPosition: [number, number] = [transformedCoord[0], transformedCoord[1]];
       
-      // Update marker position
-      const source = marker.current.getSource();
-      const feature = source.getFeatures()[0];
-      feature.getGeometry().setCoordinates(transformedPosition);
+      console.log('Transformed position:', transformedPosition);
+
+      // Update or create marker
+      if (marker.current) {
+        console.log('Updating existing marker');
+        const source = marker.current.getSource();
+        const feature = source.getFeatures()[0];
+        feature.getGeometry().setCoordinates(transformedPosition);
+      } else {
+        console.log('Creating new marker');
+        marker.current = ISSMarker({ 
+          map: map.current, 
+          position: transformedPosition
+        });
+      }
       
       // Update trajectory
       positions.current.push({
@@ -84,16 +83,21 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
         timestamp: Date.now()
       });
 
+      console.log('Updated positions array:', positions.current);
+
       // Keep only positions from the last 90 minutes
       const ninetyMinutesAgo = Date.now() - 5400000;
       positions.current = positions.current.filter(pos => pos.timestamp > ninetyMinutesAgo);
       
-      console.log('Trajectory positions:', positions.current.length);
+      console.log('Filtered positions array length:', positions.current.length);
       
       // Remove old trajectory and create new one
       if (trajectory.current) {
+        console.log('Removing old trajectory');
         map.current.removeLayer(trajectory.current);
       }
+      
+      console.log('Creating new trajectory');
       trajectory.current = ISSTrajectory({ 
         map: map.current, 
         positions: positions.current 
@@ -101,6 +105,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       
       // Center map on ISS if it's the first position
       if (isFirstPosition.current) {
+        console.log('First position - centering map');
         map.current.getView().setCenter(transformedPosition);
         map.current.getView().setZoom(4);
         isFirstPosition.current = false;

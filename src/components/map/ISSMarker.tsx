@@ -11,6 +11,8 @@ interface ISSMarkerProps {
 }
 
 const ISSMarker = ({ map, position }: ISSMarkerProps) => {
+  console.log('Creating ISS marker at position:', position);
+  
   // Create a new vector source
   const source = new VectorSource();
   
@@ -20,19 +22,21 @@ const ISSMarker = ({ map, position }: ISSMarkerProps) => {
   });
 
   // Apply styling to make the ISS dot visible
-  feature.setStyle(
-    new Style({
-      image: new CircleStyle({
-        radius: 8,
-        fill: new Fill({ color: '#00BFFF' }),
-        stroke: new Stroke({ 
-          color: '#FFFFFF',
-          width: 2
-        }),
+  const style = new Style({
+    image: new CircleStyle({
+      radius: 8,
+      fill: new Fill({ color: '#00BFFF' }),
+      stroke: new Stroke({ 
+        color: '#FFFFFF',
+        width: 2
       }),
-    })
-  );
+    }),
+  });
 
+  console.log('Setting style for ISS marker');
+  feature.setStyle(style);
+
+  console.log('Adding feature to source');
   source.addFeature(feature);
 
   // Create and add the vector layer
@@ -41,6 +45,7 @@ const ISSMarker = ({ map, position }: ISSMarkerProps) => {
     zIndex: 3, // Keep ISS dot on top
   });
 
+  console.log('Adding vector layer to map');
   map.addLayer(vectorLayer);
   return vectorLayer;
 };
