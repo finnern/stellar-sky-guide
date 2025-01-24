@@ -1,6 +1,9 @@
 interface ISSLocation {
   latitude: number;
   longitude: number;
+  altitude: number;
+  velocity: number;
+  visibility: string;
   timestamp: number;
 }
 
@@ -11,12 +14,38 @@ export const getISSLocation = async (): Promise<ISSLocation> => {
   return {
     latitude: data.latitude,
     longitude: data.longitude,
+    altitude: data.altitude,
+    velocity: data.velocity,
+    visibility: data.visibility,
     timestamp: data.timestamp,
   };
 };
 
-export const getISSPassTimes = async (lat: number, lon: number): Promise<any> => {
-  const response = await fetch(`http://api.open-notify.org/iss-pass.json?lat=${lat}&lon=${lon}`);
-  const data = await response.json();
-  return data.response[0];
+// Calculate next pass time based on current ISS position and user location
+export const calculateNextPass = (
+  issLat: number,
+  issLon: number,
+  userLat: number,
+  userLon: number
+): Date => {
+  // Simple estimation - this could be improved with more sophisticated calculations
+  const R = 6371; // Earth's radius in km
+  const lat1 = issLat * Math.PI / 180;
+  const lat2 = userLat * Math.PI / 180;
+  const deltaLat = (userLat - issLat) * Math.PI / 180;
+  const deltaLon = (userLon - issLon) * Math.PI / 180;
+
+  const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+           Math.cos(lat1) * Math.cos(lat2) *
+           Math.sin(deltaLon/2) * Math.sin(deltaLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+
+  // ISS orbits Earth every ~90 minutes (5400 seconds)
+  // Estimate next pass based on current distance
+  const estimatedSeconds = (distance / 27576) * 5400; // Using average velocity
+  const nextPass = new Date();
+  nextPass.setSeconds(nextPass.getSeconds() + estimatedSeconds);
+
+  return nextPass;
 };

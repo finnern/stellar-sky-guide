@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getISSLocation, getISSPassTimes } from '../services/issLocation';
+import { getISSLocation, calculateNextPass } from '../services/issLocation';
 import Countdown from '../components/Countdown';
 import LocationInput from '../components/LocationInput';
 import { toast } from '@/components/ui/use-toast';
@@ -25,22 +25,24 @@ const Index = () => {
     }
   }, [error]);
 
-  const handleLocationSubmit = async (lat: number, lon: number) => {
-    try {
-      setUserLocation({ lat, lon });
-      const passTime = await getISSPassTimes(lat, lon);
-      setNextPass(new Date(passTime.risetime * 1000));
-      toast({
-        title: "Location Updated",
-        description: "Successfully calculated next ISS pass time.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to calculate ISS pass times. Please try again.",
-        variant: "destructive",
-      });
+  useEffect(() => {
+    if (issLocation && userLocation) {
+      const nextPassTime = calculateNextPass(
+        issLocation.latitude,
+        issLocation.longitude,
+        userLocation.lat,
+        userLocation.lon
+      );
+      setNextPass(nextPassTime);
     }
+  }, [issLocation, userLocation]);
+
+  const handleLocationSubmit = (lat: number, lon: number) => {
+    setUserLocation({ lat, lon });
+    toast({
+      title: "Location Updated",
+      description: "Calculating next ISS pass time...",
+    });
   };
 
   return (
@@ -61,7 +63,7 @@ const Index = () => {
 
         {issLocation && (
           <div className="glass-card p-6 mt-8">
-            <h2 className="text-xl font-bold text-space-blue mb-4">Current ISS Location</h2>
+            <h2 className="text-xl font-bold text-space-blue mb-4">Current ISS Status</h2>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
                 <p className="text-gray-400">Latitude</p>
@@ -70,6 +72,18 @@ const Index = () => {
               <div>
                 <p className="text-gray-400">Longitude</p>
                 <p className="text-2xl font-bold">{issLocation.longitude.toFixed(4)}°</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Altitude</p>
+                <p className="text-2xl font-bold">{issLocation.altitude.toFixed(2)} km</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Velocity</p>
+                <p className="text-2xl font-bold">{(issLocation.velocity).toFixed(0)} km/h</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-gray-400">Visibility</p>
+                <p className="text-2xl font-bold capitalize">{issLocation.visibility}</p>
               </div>
             </div>
           </div>
