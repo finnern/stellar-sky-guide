@@ -1,6 +1,6 @@
 import { Feature } from 'ol';
 import { Point } from 'ol/geom';
-import { Style, Circle, Fill, Stroke } from 'ol/style';
+import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { Map } from 'ol';
@@ -18,9 +18,9 @@ const ISSMarker = ({ map, position }: ISSMarkerProps) => {
 
   feature.setStyle(
     new Style({
-      image: new Circle({
-        radius: 6,
-        fill: new Fill({ color: '#33C3F0' }),
+      image: new CircleStyle({
+        radius: 8,
+        fill: new Fill({ color: '#00BFFF' }),
         stroke: new Stroke({ 
           color: '#FFFFFF',
           width: 2
@@ -33,7 +33,7 @@ const ISSMarker = ({ map, position }: ISSMarkerProps) => {
 
   const vectorLayer = new VectorLayer({
     source: source,
-    zIndex: 2,
+    zIndex: 3, // Ensure ISS dot stays on top
   });
 
   map.addLayer(vectorLayer);

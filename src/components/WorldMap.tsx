@@ -6,7 +6,6 @@ import MapBase from './map/MapBase';
 import ISSMarker from './map/ISSMarker';
 import ISSTrajectory from './map/ISSTrajectory';
 import { transform } from 'ol/proj';
-import { Coordinate } from 'ol/coordinate';
 
 interface WorldMapProps {
   issLocation: {
@@ -75,7 +74,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       const feature = source.getFeatures()[0];
       feature.getGeometry().setCoordinates(transformedPosition);
       
-      // Update trajectory with timestamp
+      // Update trajectory
       positions.current.push({
         coords: transformedPosition,
         timestamp: Date.now()
@@ -94,6 +93,10 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
         positions: positions.current 
       });
       
+      // Center map on ISS if it's the first position
+      if (positions.current.length === 1) {
+        map.current.getView().setCenter(transformedPosition);
+      }
     } catch (error) {
       console.error('Position update error:', error);
       toast({
