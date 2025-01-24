@@ -30,7 +30,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       
       if (issLocation) {
         const position: [number, number] = [issLocation.longitude, issLocation.latitude];
-        const transformedPosition = transform(position, 'EPSG:4326', 'EPSG:3857');
+        const transformedPosition = transform(position, 'EPSG:4326', 'EPSG:3857') as [number, number];
         
         marker.current = ISSMarker({ 
           map: map.current, 
@@ -65,7 +65,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     try {
       const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
-      const transformedPosition = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
+      const transformedPosition = transform(newPosition, 'EPSG:4326', 'EPSG:3857') as [number, number];
       
       // Update marker position
       const source = marker.current.getSource();
