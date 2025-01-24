@@ -4,7 +4,9 @@ export const initializeMap = (container: HTMLElement): L.Map => {
   const map = L.map(container).setView([52.52, 13.405], 3);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 18,
+    className: 'dark-tiles'
   }).addTo(map);
 
   return map;

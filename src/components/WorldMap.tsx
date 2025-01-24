@@ -15,6 +15,8 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const marker = useRef<L.Marker | null>(null);
+  const trajectory = useRef<L.Polyline | null>(null);
+  const positions = useRef<[number, number][]>([]);
 
   // Initialize map
   useEffect(() => {
@@ -23,6 +25,11 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     try {
       map.current = initializeMap(mapContainer.current);
       marker.current = createISSMarker(map.current);
+      trajectory.current = L.polyline([], { 
+        color: '#33C3F0',
+        weight: 2,
+        opacity: 0.6
+      }).addTo(map.current);
     } catch (error) {
       toast({
         title: "Map Error",
@@ -39,12 +46,23 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     };
   }, []);
 
-  // Update ISS position
+  // Update ISS position and trajectory
   useEffect(() => {
-    if (!issLocation || !map.current || !marker.current) return;
+    if (!issLocation || !map.current || !marker.current || !trajectory.current) return;
 
     try {
+      const newPosition: [number, number] = [issLocation.latitude, issLocation.longitude];
+      
+      // Update marker position
       updateMarkerPosition(map.current, marker.current, issLocation);
+      
+      // Update trajectory
+      positions.current.push(newPosition);
+      if (positions.current.length > 50) { // Keep last 50 positions
+        positions.current.shift();
+      }
+      trajectory.current.setLatLngs(positions.current);
+      
     } catch (error) {
       toast({
         title: "Update Error",
