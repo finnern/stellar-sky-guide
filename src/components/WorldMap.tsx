@@ -16,7 +16,7 @@ interface WorldMapProps {
 const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
-  const marker = useRef<L.Marker | null>(null);
+  const marker = useRef<L.CircleMarker | null>(null);
   const trajectory = useRef<L.Polyline | null>(null);
   const positions = useRef<[number, number][]>([]);
 
@@ -64,7 +64,6 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     try {
       const newPosition: [number, number] = [issLocation.latitude, issLocation.longitude];
-      console.log('Updating ISS position:', newPosition);
       
       // Update marker position
       marker.current.setLatLng(newPosition);
@@ -90,14 +89,6 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     <div className="glass-card overflow-hidden space-y-4">
       <style>
         {`
-          .iss-marker {
-            cursor: pointer;
-            animation: pulse-slow 2s infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            filter: drop-shadow(0 0 8px #33C3F0);
-          }
           .leaflet-container {
             background: #1A1F2C;
             height: 400px;
@@ -107,34 +98,13 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
           .leaflet-tile-pane {
             filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
           }
-          @keyframes pulse-slow {
-            0% {
-              opacity: 0.6;
-              transform: scale(1);
-            }
-            50% {
-              opacity: 1;
-              transform: scale(1.2);
-            }
-            100% {
-              opacity: 0.6;
-              transform: scale(1);
-            }
+          .iss-marker {
+            cursor: pointer;
+            animation: pulse-slow 2s infinite;
           }
         `}
       </style>
       <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
-      <div className="text-center text-xs text-gray-400">
-        <a 
-          href="https://www.flaticon.com/free-icons/spacecraft" 
-          title="spacecraft icons"
-          className="hover:text-space-blue transition-colors"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Spacecraft icons created by Freepik - Flaticon
-        </a>
-      </div>
     </div>
   );
 };
