@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { initializeMap, setupMapEffects, createISSMarker } from '../utils/mapUtils';
 
 interface WorldMapProps {
   issLocation: {
@@ -14,52 +15,18 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const markerInstance = useRef<mapboxgl.Marker | null>(null);
 
+  // Initialize map
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    // Initialize map with a valid public token
-    mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
-    
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/navigation-night-v1',
-      projection: 'globe',
-      zoom: 1.5,
-      center: [0, 0],
-      pitch: 45,
-    });
-
-    // Add navigation controls
-    map.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
-
-    // Add atmosphere and fog effects
-    map.on('style.load', () => {
-      map.setFog({
-        color: 'rgb(23, 25, 37)',
-        'high-color': 'rgb(36, 37, 49)',
-        'horizon-blend': 0.2,
-      });
-
-      // Create ISS marker
-      const el = document.createElement('div');
-      el.className = 'iss-marker';
-      el.innerHTML = '⊕';
-      
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([0, 0])
-        .addTo(map);
-
-      markerInstance.current = marker;
-    });
-
+    const map = initializeMap(mapContainer.current);
     mapInstance.current = map;
 
-    // Cleanup function
+    map.on('style.load', () => {
+      setupMapEffects(map);
+      markerInstance.current = createISSMarker(map);
+    });
+
     return () => {
       if (markerInstance.current) {
         markerInstance.current.remove();
@@ -78,7 +45,6 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     markerInstance.current.setLngLat([issLocation.longitude, issLocation.latitude]);
     
-    // Smoothly animate to new position
     mapInstance.current.easeTo({
       center: [issLocation.longitude, issLocation.latitude],
       duration: 2000,
