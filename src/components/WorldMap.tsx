@@ -27,8 +27,10 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     try {
       map.current = MapBase({ container: mapContainer.current });
+      console.log('Map initialized');
       
       if (issLocation) {
+        console.log('Initial ISS position:', issLocation);
         const position: [number, number] = [issLocation.longitude, issLocation.latitude];
         const transformedCoord = transform(position, 'EPSG:4326', 'EPSG:3857');
         const transformedPosition: [number, number] = [transformedCoord[0], transformedCoord[1]];
@@ -65,6 +67,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     if (!issLocation || !map.current || !marker.current) return;
 
     try {
+      console.log('Updating ISS position:', issLocation);
       const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
       const transformedCoord = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
       const transformedPosition: [number, number] = [transformedCoord[0], transformedCoord[1]];
@@ -81,8 +84,10 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       });
 
       // Keep only positions from the last 90 minutes
-      const ninetyMinutesAgo = Date.now() - 5400000; // 90 minutes in milliseconds
+      const ninetyMinutesAgo = Date.now() - 5400000;
       positions.current = positions.current.filter(pos => pos.timestamp > ninetyMinutesAgo);
+      
+      console.log('Trajectory positions:', positions.current.length);
       
       // Remove old trajectory and create new one
       if (trajectory.current) {

@@ -17,6 +17,8 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
   const source = new VectorSource();
   
   if (positions.length > 1) {
+    console.log('Creating trajectory with positions:', positions.length);
+    
     // Create line segments with fading colors
     for (let i = 0; i < positions.length - 1; i++) {
       const segment = new Feature({
@@ -26,9 +28,9 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
         ]),
       });
 
-      // Calculate opacity based on age (newer segments are more opaque)
+      // Calculate opacity based on age
       const currentTime = Date.now();
-      const segmentAge = (currentTime - positions[i].timestamp) / 5400000; // Normalize by 90 minutes
+      const segmentAge = (currentTime - positions[i].timestamp) / 5400000; // 90 minutes
       const opacity = Math.max(0, 1 - segmentAge);
 
       segment.setStyle(
