@@ -6,6 +6,7 @@ import MapBase from './map/MapBase';
 import ISSMarker from './map/ISSMarker';
 import ISSTrajectory from './map/ISSTrajectory';
 import { transform } from 'ol/proj';
+import { Coordinate } from 'ol/coordinate';
 
 interface WorldMapProps {
   issLocation: {
@@ -30,7 +31,8 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       
       if (issLocation) {
         const position: [number, number] = [issLocation.longitude, issLocation.latitude];
-        const transformedPosition = transform(position, 'EPSG:4326', 'EPSG:3857');
+        const transformedCoord = transform(position, 'EPSG:4326', 'EPSG:3857');
+        const transformedPosition: [number, number] = [transformedCoord[0], transformedCoord[1]];
         
         marker.current = ISSMarker({ 
           map: map.current, 
@@ -65,7 +67,8 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     try {
       const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
-      const transformedPosition = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
+      const transformedCoord = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
+      const transformedPosition: [number, number] = [transformedCoord[0], transformedCoord[1]];
       
       // Update marker position
       const source = marker.current.getSource();
