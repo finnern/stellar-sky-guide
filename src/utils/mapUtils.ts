@@ -1,9 +1,10 @@
 import mapboxgl from 'mapbox-gl';
 
+// Initialize map with container
 export const initializeMap = (container: HTMLDivElement): mapboxgl.Map => {
   mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
   
-  const map = new mapboxgl.Map({
+  return new mapboxgl.Map({
     container,
     style: 'mapbox://styles/mapbox/navigation-night-v1',
     projection: 'globe',
@@ -11,17 +12,9 @@ export const initializeMap = (container: HTMLDivElement): mapboxgl.Map => {
     center: [0, 0],
     pitch: 45,
   });
-
-  map.addControl(
-    new mapboxgl.NavigationControl({
-      visualizePitch: true,
-    }),
-    'top-right'
-  );
-
-  return map;
 };
 
+// Setup map effects
 export const setupMapEffects = (map: mapboxgl.Map) => {
   map.setFog({
     color: 'rgb(23, 25, 37)',
@@ -30,6 +23,7 @@ export const setupMapEffects = (map: mapboxgl.Map) => {
   });
 };
 
+// Create ISS marker
 export const createISSMarker = (map: mapboxgl.Map): mapboxgl.Marker => {
   const el = document.createElement('div');
   el.className = 'iss-marker';
