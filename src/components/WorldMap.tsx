@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { initializeMap, setupMapEffects, createISSMarker } from '../utils/mapUtils';
+import { toast } from '@/components/ui/use-toast';
 
 interface WorldMapProps {
   issLocation: {
@@ -14,21 +15,36 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
+  const [mapboxToken, setMapboxToken] = useState<string>('');
+  const [isMapInitialized, setIsMapInitialized] = useState(false);
 
-  // Initialize map only once
+  const initializeMapWithToken = () => {
+    if (!mapContainer.current || !mapboxToken) return;
+    
+    try {
+      map.current = initializeMap(mapContainer.current, mapboxToken);
+      marker.current = createISSMarker(map.current);
+
+      map.current.on('style.load', () => {
+        if (!map.current) return;
+        setupMapEffects(map.current);
+        setIsMapInitialized(true);
+      });
+    } catch (error) {
+      toast({
+        title: "Map Error",
+        description: "Failed to initialize map. Please check your Mapbox token.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Initialize map when token is provided
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
-
-    map.current = initializeMap(mapContainer.current);
-    marker.current = createISSMarker(map.current);
-
-    // Add fog effect after style loads
-    map.current.on('style.load', () => {
-      if (!map.current) return;
-      setupMapEffects(map.current);
-    });
-
-    // Cleanup function
+    if (mapboxToken) {
+      initializeMapWithToken();
+    }
+    
     return () => {
       if (marker.current) {
         marker.current.remove();
@@ -37,27 +53,51 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
         map.current.remove();
       }
     };
-  }, []);
+  }, [mapboxToken]);
 
-  // Update ISS position in a separate effect
+  // Update ISS position
   useEffect(() => {
-    if (!issLocation || !map.current || !marker.current) return;
+    if (!issLocation || !map.current || !marker.current || !isMapInitialized) return;
 
     const { longitude, latitude } = issLocation;
     
-    // Update marker position
     marker.current.setLngLat([longitude, latitude]);
     
-    // Update map center with animation
     map.current.easeTo({
       center: [longitude, latitude],
       duration: 1500,
       essential: true
     });
-  }, [issLocation]);
+  }, [issLocation, isMapInitialized]);
 
   return (
-    <div className="glass-card overflow-hidden">
+    <div className="glass-card overflow-hidden space-y-4">
+      {!isMapInitialized && (
+        <div className="p-4">
+          <label htmlFor="mapbox-token" className="block text-sm font-medium text-gray-300 mb-2">
+            Enter your Mapbox token to initialize the map
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="mapbox-token"
+              type="text"
+              className="flex-1 rounded-md bg-gray-800 border border-gray-600 px-3 py-2 text-sm text-white"
+              placeholder="pk.eyJ1..."
+              value={mapboxToken}
+              onChange={(e) => setMapboxToken(e.target.value)}
+            />
+            <button
+              onClick={initializeMapWithToken}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Initialize Map
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            Get your token from <a href="https://www.mapbox.com/account/access-tokens" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Mapbox Dashboard</a>
+          </p>
+        </div>
+      )}
       <style>
         {`
           .iss-marker {

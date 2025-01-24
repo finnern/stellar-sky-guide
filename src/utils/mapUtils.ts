@@ -1,7 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 
-export const initializeMap = (container: HTMLDivElement): mapboxgl.Map => {
-  mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
+export const initializeMap = (container: HTMLDivElement, accessToken: string): mapboxgl.Map => {
+  mapboxgl.accessToken = accessToken;
   
   return new mapboxgl.Map({
     container,
