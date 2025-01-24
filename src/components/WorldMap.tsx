@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { initializeMap, createISSMarker, updateMarkerPosition } from '../utils/mapUtils';
 import { toast } from '@/components/ui/use-toast';
+import MapBase from './map/MapBase';
+import ISSMarker from './map/ISSMarker';
+import ISSTrajectory from './map/ISSTrajectory';
 
 interface WorldMapProps {
   issLocation: {
@@ -23,13 +25,17 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     if (!mapContainer.current || map.current) return;
 
     try {
-      map.current = initializeMap(mapContainer.current);
-      marker.current = createISSMarker(map.current);
-      trajectory.current = L.polyline([], { 
-        color: '#33C3F0',
-        weight: 2,
-        opacity: 0.6
-      }).addTo(map.current);
+      map.current = MapBase({ container: mapContainer.current });
+      if (issLocation) {
+        marker.current = ISSMarker({ 
+          map: map.current, 
+          position: [issLocation.latitude, issLocation.longitude] 
+        });
+        trajectory.current = ISSTrajectory({ 
+          map: map.current, 
+          positions: positions.current 
+        });
+      }
     } catch (error) {
       toast({
         title: "Map Error",
@@ -54,11 +60,11 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       const newPosition: [number, number] = [issLocation.latitude, issLocation.longitude];
       
       // Update marker position
-      updateMarkerPosition(map.current, marker.current, issLocation);
+      marker.current.setLatLng(newPosition);
       
       // Update trajectory
       positions.current.push(newPosition);
-      if (positions.current.length > 1200) {
+      if (positions.current.length > 1200) { // Keep approximately 100 minutes of data (5s updates)
         positions.current.shift();
       }
       trajectory.current.setLatLngs(positions.current);
