@@ -72,19 +72,19 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
     }
   };
 
-  const initializeOrientationTracking = () => {
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      console.log("Orientation event received:", {
-        alpha: event.alpha,
-        beta: event.beta,
-        gamma: event.gamma
-      });
-      
-      if (event.alpha !== null) {
-        setDeviceOrientation(event.alpha);
-      }
-    };
+  const handleOrientation = (event: DeviceOrientationEvent) => {
+    console.log("Orientation event received:", {
+      alpha: event.alpha,
+      beta: event.beta,
+      gamma: event.gamma
+    });
+    
+    if (event.alpha !== null) {
+      setDeviceOrientation(event.alpha);
+    }
+  };
 
+  const initializeOrientationTracking = () => {
     window.addEventListener('deviceorientation', handleOrientation, true);
     
     toast({
@@ -95,11 +95,12 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
 
   // Cleanup orientation tracking on unmount
   useEffect(() => {
-    return () => {
-      if (permissionGranted) {
-        window.removeEventListener('deviceorientation', () => {}, true);
-      }
-    };
+    if (permissionGranted) {
+      window.addEventListener('deviceorientation', handleOrientation, true);
+      return () => {
+        window.removeEventListener('deviceorientation', handleOrientation, true);
+      };
+    }
   }, [permissionGranted]);
 
   // Calculate the final rotation including device orientation
