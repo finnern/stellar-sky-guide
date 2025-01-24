@@ -26,17 +26,23 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     try {
       map.current = MapBase({ container: mapContainer.current });
+      
       if (issLocation) {
+        const position: [number, number] = [issLocation.latitude, issLocation.longitude];
+        map.current.setView(position, 2);
+        
         marker.current = ISSMarker({ 
           map: map.current, 
-          position: [issLocation.latitude, issLocation.longitude] 
+          position: position
         });
+        
         trajectory.current = ISSTrajectory({ 
           map: map.current, 
           positions: positions.current 
         });
       }
     } catch (error) {
+      console.error('Map initialization error:', error);
       toast({
         title: "Map Error",
         description: "Failed to initialize map. Please try again later.",
@@ -58,18 +64,20 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     try {
       const newPosition: [number, number] = [issLocation.latitude, issLocation.longitude];
+      console.log('Updating ISS position:', newPosition);
       
       // Update marker position
       marker.current.setLatLng(newPosition);
       
       // Update trajectory
       positions.current.push(newPosition);
-      if (positions.current.length > 1200) {
+      if (positions.current.length > 1200) { // Keep approximately 100 minutes of data (5s updates)
         positions.current.shift();
       }
       trajectory.current.setLatLngs(positions.current);
       
     } catch (error) {
+      console.error('Position update error:', error);
       toast({
         title: "Update Error",
         description: "Unable to update ISS location. Please try again later.",
