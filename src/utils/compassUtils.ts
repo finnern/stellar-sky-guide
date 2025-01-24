@@ -1,4 +1,18 @@
 /**
+ * Converts degrees to radians
+ */
+const toRadians = (degrees: number): number => {
+  return degrees * (Math.PI / 180);
+};
+
+/**
+ * Converts radians to degrees
+ */
+const toDegrees = (radians: number): number => {
+  return radians * (180 / Math.PI);
+};
+
+/**
  * Calculates the bearing between two points on Earth
  * @returns Bearing in degrees (0° = North, 90° = East, etc.)
  */
@@ -9,15 +23,15 @@ export const calculateBearing = (
   issLon: number
 ): number => {
   // Convert to radians
-  const lat1 = userLat * Math.PI / 180;
-  const lat2 = issLat * Math.PI / 180;
-  const dLon = (issLon - userLon) * Math.PI / 180;
+  const lat1 = toRadians(userLat);
+  const lat2 = toRadians(issLat);
+  const dLon = toRadians(issLon - userLon);
 
   const y = Math.sin(dLon) * Math.cos(lat2);
   const x = Math.cos(lat1) * Math.sin(lat2) -
            Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
   
-  let bearing = Math.atan2(y, x) * 180 / Math.PI;
+  let bearing = toDegrees(Math.atan2(y, x));
   bearing = (bearing + 360) % 360; // Normalize to 0-360
   
   return bearing;
@@ -30,4 +44,21 @@ export const getCardinalDirection = (bearing: number): string => {
   const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const index = Math.round(bearing / 45) % 8;
   return directions[index];
+};
+
+/**
+ * Requests device orientation permission
+ */
+export const requestOrientationPermission = async (): Promise<boolean> => {
+  if (typeof DeviceOrientationEvent !== 'undefined' && 
+      typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+    try {
+      const permission = await (DeviceOrientationEvent as any).requestPermission();
+      return permission === 'granted';
+    } catch (err) {
+      console.error('Error requesting device orientation permission:', err);
+      return false;
+    }
+  }
+  return true; // Permission not required on this device
 };
