@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { Map } from 'ol';
+import 'ol/ol.css';
 import { toast } from '@/components/ui/use-toast';
 import MapBase from './map/MapBase';
 import ISSMarker from './map/ISSMarker';
@@ -15,9 +15,9 @@ interface WorldMapProps {
 
 const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<L.Map | null>(null);
-  const marker = useRef<L.CircleMarker | null>(null);
-  const trajectory = useRef<L.Polyline | null>(null);
+  const map = useRef<Map | null>(null);
+  const marker = useRef<any>(null);
+  const trajectory = useRef<any>(null);
   const positions = useRef<[number, number][]>([]);
 
   // Initialize map
@@ -28,8 +28,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       map.current = MapBase({ container: mapContainer.current });
       
       if (issLocation) {
-        const position: [number, number] = [issLocation.latitude, issLocation.longitude];
-        map.current.setView(position, 2);
+        const position: [number, number] = [issLocation.longitude, issLocation.latitude];
         
         marker.current = ISSMarker({ 
           map: map.current, 
@@ -52,7 +51,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     return () => {
       if (map.current) {
-        map.current.remove();
+        map.current.setTarget(undefined);
         map.current = null;
       }
     };
@@ -63,17 +62,25 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     if (!issLocation || !map.current || !marker.current || !trajectory.current) return;
 
     try {
-      const newPosition: [number, number] = [issLocation.latitude, issLocation.longitude];
+      const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
       
       // Update marker position
-      marker.current.setLatLng(newPosition);
+      const source = marker.current.getSource();
+      const feature = source.getFeatures()[0];
+      feature.getGeometry().setCoordinates(fromLonLat(newPosition));
       
       // Update trajectory
       positions.current.push(newPosition);
       if (positions.current.length > 1200) {
         positions.current.shift();
       }
-      trajectory.current.setLatLngs(positions.current);
+      
+      // Remove old trajectory and create new one
+      map.current.removeLayer(trajectory.current);
+      trajectory.current = ISSTrajectory({ 
+        map: map.current, 
+        positions: positions.current 
+      });
       
     } catch (error) {
       console.error('Position update error:', error);
@@ -89,22 +96,15 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     <div className="glass-card overflow-hidden space-y-4">
       <style>
         {`
-          .leaflet-container {
-            background: #1A1F2C;
+          .map {
             height: 400px;
             width: 100%;
             border-radius: 0.5rem;
-          }
-          .leaflet-tile-pane {
-            filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
-          }
-          .iss-marker {
-            cursor: pointer;
-            animation: pulse-slow 2s infinite;
+            background: #1A1F2C;
           }
         `}
       </style>
-      <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
+      <div ref={mapContainer} className="map" />
     </div>
   );
 };
