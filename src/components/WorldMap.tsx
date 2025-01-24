@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { initializeMap, setupMapEffects, createISSMarker } from '../utils/mapUtils';
 
 interface WorldMapProps {
   issLocation: {
@@ -19,23 +18,44 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    const map = initializeMap(mapContainer.current);
-    mapInstance.current = map;
+    // Initialize Mapbox
+    mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
+    
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/navigation-night-v1',
+      projection: 'globe',
+      zoom: 1.5,
+      center: [0, 0],
+      pitch: 45,
+    });
 
     map.on('style.load', () => {
-      setupMapEffects(map);
-      markerInstance.current = createISSMarker(map);
+      // Set fog effect
+      map.setFog({
+        color: 'rgb(23, 25, 37)',
+        'high-color': 'rgb(36, 37, 49)',
+        'horizon-blend': 0.2,
+      });
+
+      // Create ISS marker
+      const el = document.createElement('div');
+      el.className = 'iss-marker';
+      el.innerHTML = '⊕';
+      markerInstance.current = new mapboxgl.Marker(el)
+        .setLngLat([0, 0])
+        .addTo(map);
     });
+
+    mapInstance.current = map;
 
     return () => {
       if (markerInstance.current) {
         markerInstance.current.remove();
         markerInstance.current = null;
       }
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
+      map.remove();
+      mapInstance.current = null;
     };
   }, []);
 
@@ -43,10 +63,11 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   useEffect(() => {
     if (!issLocation || !mapInstance.current || !markerInstance.current) return;
 
-    markerInstance.current.setLngLat([issLocation.longitude, issLocation.latitude]);
+    const { longitude, latitude } = issLocation;
+    markerInstance.current.setLngLat([longitude, latitude]);
     
     mapInstance.current.easeTo({
-      center: [issLocation.longitude, issLocation.latitude],
+      center: [longitude, latitude],
       duration: 2000,
     });
   }, [issLocation]);

@@ -9,31 +9,22 @@ const BERLIN_COORDS = {
   lon: 13.4050,
 };
 
+export const getDefaultLocation = () => BERLIN_COORDS;
+
 export const geocodeLocation = async (location: string): Promise<GeocodingResult> => {
   try {
-    const response = await fetch(
-      `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(location)}&key=YOUR_OPENCAGE_API_KEY`
-    );
-    const data = await response.json();
-
-    if (data.results && data.results.length > 0) {
-      const result = data.results[0].geometry;
-      return {
-        lat: result.lat,
-        lon: result.lng,
-      };
-    }
-    
+    // For now, return default Berlin coordinates since we don't have a valid API key
+    // In a production environment, you would use a proper geocoding service
+    console.log(`Geocoding request for location: ${location}`);
     return {
       ...BERLIN_COORDS,
-      error: "Location not found. Using default location (Berlin, Germany)."
+      error: "Using default location (Berlin, Germany) - Geocoding service not configured."
     };
   } catch (error) {
+    console.error('Geocoding error:', error);
     return {
       ...BERLIN_COORDS,
       error: "Error fetching location. Using default location (Berlin, Germany)."
     };
   }
 };
-
-export const getDefaultLocation = () => BERLIN_COORDS;
