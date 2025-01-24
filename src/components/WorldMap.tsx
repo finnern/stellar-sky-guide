@@ -5,6 +5,7 @@ import { toast } from '@/components/ui/use-toast';
 import MapBase from './map/MapBase';
 import ISSMarker from './map/ISSMarker';
 import ISSTrajectory from './map/ISSTrajectory';
+import { transform } from 'ol/proj';
 
 interface WorldMapProps {
   issLocation: {
@@ -29,10 +30,11 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       
       if (issLocation) {
         const position: [number, number] = [issLocation.longitude, issLocation.latitude];
+        const transformedPosition = transform(position, 'EPSG:4326', 'EPSG:3857');
         
         marker.current = ISSMarker({ 
           map: map.current, 
-          position: position
+          position: transformedPosition
         });
         
         trajectory.current = ISSTrajectory({ 
@@ -63,14 +65,15 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     try {
       const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
+      const transformedPosition = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
       
       // Update marker position
       const source = marker.current.getSource();
       const feature = source.getFeatures()[0];
-      feature.getGeometry().setCoordinates(fromLonLat(newPosition));
+      feature.getGeometry().setCoordinates(transformedPosition);
       
       // Update trajectory
-      positions.current.push(newPosition);
+      positions.current.push(transformedPosition);
       if (positions.current.length > 1200) {
         positions.current.shift();
       }

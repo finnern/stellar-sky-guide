@@ -4,7 +4,6 @@ import { Style, Circle, Fill, Stroke } from 'ol/style';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { Map } from 'ol';
-import { fromLonLat } from 'ol/proj';
 
 interface ISSMarkerProps {
   map: Map;
@@ -14,7 +13,7 @@ interface ISSMarkerProps {
 const ISSMarker = ({ map, position }: ISSMarkerProps) => {
   const source = new VectorSource();
   const feature = new Feature({
-    geometry: new Point(fromLonLat(position)),
+    geometry: new Point(position),
   });
 
   feature.setStyle(
