@@ -5,12 +5,12 @@ interface ISSLocation {
 }
 
 export const getISSLocation = async (): Promise<ISSLocation> => {
-  const response = await fetch('http://api.open-notify.org/iss-now.json');
+  const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
   const data = await response.json();
   
   return {
-    latitude: parseFloat(data.iss_position.latitude),
-    longitude: parseFloat(data.iss_position.longitude),
+    latitude: data.latitude,
+    longitude: data.longitude,
     timestamp: data.timestamp,
   };
 };
