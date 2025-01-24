@@ -7,15 +7,13 @@ interface ISSMarkerProps {
 }
 
 const ISSMarker = ({ map, position }: ISSMarkerProps) => {
-  const issIcon = L.divIcon({
+  return L.circleMarker(position, {
+    radius: 10,
+    color: '#33C3F0',
+    fillColor: '#33C3F0',
+    fillOpacity: 0.8,
+    weight: 2,
     className: 'iss-marker',
-    html: `<img src="/iss-icon.svg" alt="ISS" style="width: 100%; height: 100%; filter: drop-shadow(0 0 8px #33C3F0);" />`,
-    iconSize: [50, 50],
-    iconAnchor: [25, 25]
-  });
-
-  return L.marker(position, { 
-    icon: issIcon,
     interactive: true,
     title: 'International Space Station'
   }).addTo(map);
