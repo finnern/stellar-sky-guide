@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -7,8 +7,13 @@ interface LocationInputProps {
 }
 
 const LocationInput = ({ onLocationSubmit }: LocationInputProps) => {
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
+  const [latitude, setLatitude] = useState('48.2281');
+  const [longitude, setLongitude] = useState('8.3845');
+
+  // Submit the initial coordinates when component mounts
+  useEffect(() => {
+    handleSubmit(new Event('submit') as any);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
