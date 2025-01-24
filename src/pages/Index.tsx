@@ -43,7 +43,7 @@ const Index = () => {
     setUserLocation({ lat, lon });
     toast({
       title: "Location Updated",
-      description: "Calculating next ISS pass time...",
+      description: `Location set to Latitude: ${lat.toFixed(4)}°, Longitude: ${lon.toFixed(4)}°`,
     });
   };
 
@@ -55,52 +55,53 @@ const Index = () => {
           <p className="text-lg text-gray-300">Track the International Space Station in real-time</p>
         </header>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <LocationInput onLocationSubmit={handleLocationSubmit} />
-          
-          {nextPass && (
-            <Countdown targetDate={nextPass} />
-          )}
-        </div>
+        {/* Next Pass Component */}
+        {nextPass && (
+          <Countdown targetDate={nextPass} />
+        )}
 
+        {/* Compass Component */}
+        {issLocation && userLocation && (
+          <Compass 
+            userLocation={userLocation}
+            issLocation={issLocation}
+          />
+        )}
+
+        {/* Location Input */}
+        <LocationInput onLocationSubmit={handleLocationSubmit} />
+
+        {/* World Map */}
         <WorldMap issLocation={issLocation ?? null} />
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {issLocation && userLocation && (
-            <Compass 
-              userLocation={userLocation}
-              issLocation={issLocation}
-            />
-          )}
-
-          {issLocation && (
-            <div className="glass-card p-6">
-              <h2 className="text-xl font-bold text-space-blue mb-4">Current ISS Status</h2>
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p className="text-gray-400">Latitude</p>
-                  <p className="text-2xl font-bold">{issLocation.latitude.toFixed(4)}°</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Longitude</p>
-                  <p className="text-2xl font-bold">{issLocation.longitude.toFixed(4)}°</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Altitude</p>
-                  <p className="text-2xl font-bold">{issLocation.altitude.toFixed(2)} km</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Velocity</p>
-                  <p className="text-2xl font-bold">{(issLocation.velocity).toFixed(0)} km/h</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-gray-400">Visibility</p>
-                  <p className="text-2xl font-bold capitalize">{issLocation.visibility}</p>
-                </div>
+        {/* Current ISS Status */}
+        {issLocation && (
+          <div className="glass-card p-6">
+            <h2 className="text-xl font-bold text-space-blue mb-4">Current ISS Status</h2>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <p className="text-gray-400">Latitude</p>
+                <p className="text-2xl font-bold">{issLocation.latitude.toFixed(4)}°</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Longitude</p>
+                <p className="text-2xl font-bold">{issLocation.longitude.toFixed(4)}°</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Altitude</p>
+                <p className="text-2xl font-bold">{issLocation.altitude.toFixed(2)} km</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Velocity</p>
+                <p className="text-2xl font-bold">{(issLocation.velocity).toFixed(0)} km/h</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-gray-400">Visibility</p>
+                <p className="text-2xl font-bold capitalize">{issLocation.visibility}</p>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -15,7 +15,6 @@ const LocationInput = ({ onLocationSubmit }: LocationInputProps) => {
   const [longitude, setLongitude] = useState(getDefaultLocation().lon.toString());
   const [isLoading, setIsLoading] = useState(false);
 
-  // Submit the initial coordinates when component mounts
   useEffect(() => {
     handleCitySubmit(new Event('submit') as any);
   }, []);
@@ -95,20 +94,26 @@ const LocationInput = ({ onLocationSubmit }: LocationInputProps) => {
 
         <TabsContent value="coordinates">
           <form onSubmit={handleCoordinatesSubmit} className="space-y-4">
-            <Input
-              type="text"
-              placeholder="Latitude"
-              value={latitude}
-              onChange={(e) => setLatitude(e.target.value)}
-              className="bg-space-purple/50 border-space-blue/30 text-white"
-            />
-            <Input
-              type="text"
-              placeholder="Longitude"
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              className="bg-space-purple/50 border-space-blue/30 text-white"
-            />
+            <div className="space-y-2">
+              <label className="text-sm text-gray-400">Latitude (-90° to 90°)</label>
+              <Input
+                type="text"
+                placeholder="e.g., 52.5200"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                className="bg-space-purple/50 border-space-blue/30 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm text-gray-400">Longitude (-180° to 180°)</label>
+              <Input
+                type="text"
+                placeholder="e.g., 13.4050"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                className="bg-space-purple/50 border-space-blue/30 text-white"
+              />
+            </div>
             <Button 
               type="submit"
               className="w-full bg-space-blue hover:bg-space-accent transition-colors"
