@@ -19,9 +19,12 @@ const ISSMarker = ({ map, position }: ISSMarkerProps) => {
   feature.setStyle(
     new Style({
       image: new Circle({
-        radius: 10,
+        radius: 6,
         fill: new Fill({ color: '#33C3F0' }),
-        stroke: new Stroke({ color: '#33C3F0', width: 2 }),
+        stroke: new Stroke({ 
+          color: '#FFFFFF',
+          width: 2
+        }),
       }),
     })
   );

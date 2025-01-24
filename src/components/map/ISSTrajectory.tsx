@@ -28,13 +28,15 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
 
       // Calculate age as a fraction of 90 minutes (5400000 milliseconds)
       const age = (Date.now() - positions[i].timestamp) / 5400000;
-      const opacity = Math.max(0, 1 - age);
+      const opacity = Math.max(0, Math.min(1, 1 - age)); // Ensure opacity is between 0 and 1
 
       segment.setStyle(
         new Style({
           stroke: new Stroke({
             color: `rgba(51, 195, 240, ${opacity})`,
-            width: 2,
+            width: 3,
+            lineCap: 'round',
+            lineJoin: 'round'
           }),
         })
       );

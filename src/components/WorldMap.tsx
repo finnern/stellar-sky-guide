@@ -30,7 +30,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       
       if (issLocation) {
         const position: [number, number] = [issLocation.longitude, issLocation.latitude];
-        const transformedPosition = transform(position, 'EPSG:4326', 'EPSG:3857') as [number, number];
+        const transformedPosition = transform(position, 'EPSG:4326', 'EPSG:3857');
         
         marker.current = ISSMarker({ 
           map: map.current, 
@@ -61,11 +61,11 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
   // Update ISS position and trajectory
   useEffect(() => {
-    if (!issLocation || !map.current || !marker.current || !trajectory.current) return;
+    if (!issLocation || !map.current || !marker.current) return;
 
     try {
       const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
-      const transformedPosition = transform(newPosition, 'EPSG:4326', 'EPSG:3857') as [number, number];
+      const transformedPosition = transform(newPosition, 'EPSG:4326', 'EPSG:3857');
       
       // Update marker position
       const source = marker.current.getSource();
@@ -83,7 +83,9 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       positions.current = positions.current.filter(pos => pos.timestamp > ninetyMinutesAgo);
       
       // Remove old trajectory and create new one
-      map.current.removeLayer(trajectory.current);
+      if (trajectory.current) {
+        map.current.removeLayer(trajectory.current);
+      }
       trajectory.current = ISSTrajectory({ 
         map: map.current, 
         positions: positions.current 
