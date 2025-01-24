@@ -20,6 +20,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   const marker = useRef<any>(null);
   const trajectory = useRef<any>(null);
   const positions = useRef<Array<{coords: [number, number], timestamp: number}>>([]);
+  const isFirstPosition = useRef<boolean>(true);
 
   // Initialize map
   useEffect(() => {
@@ -99,8 +100,10 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       });
       
       // Center map on ISS if it's the first position
-      if (positions.current.length === 1) {
+      if (isFirstPosition.current) {
         map.current.getView().setCenter(transformedPosition);
+        map.current.getView().setZoom(4);
+        isFirstPosition.current = false;
       }
     } catch (error) {
       console.error('Position update error:', error);

@@ -4,6 +4,7 @@ import { Style, Stroke } from 'ol/style';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { Map } from 'ol';
+import { transform } from 'ol/proj';
 
 interface ISSTrajectoryProps {
   map: Map;
@@ -21,17 +22,18 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
     
     // Create line segments with fading colors
     for (let i = 0; i < positions.length - 1; i++) {
+      // Transform coordinates back to EPSG:4326 for line creation
+      const start = transform(positions[i].coords, 'EPSG:3857', 'EPSG:4326');
+      const end = transform(positions[i + 1].coords, 'EPSG:3857', 'EPSG:4326');
+      
       const segment = new Feature({
-        geometry: new LineString([
-          positions[i].coords,
-          positions[i + 1].coords
-        ]),
+        geometry: new LineString([start, end])
       });
 
       // Calculate opacity based on age
       const currentTime = Date.now();
       const segmentAge = (currentTime - positions[i].timestamp) / 5400000; // 90 minutes
-      const opacity = Math.max(0, 1 - segmentAge);
+      const opacity = Math.max(0.1, 1 - segmentAge);
 
       segment.setStyle(
         new Style({
