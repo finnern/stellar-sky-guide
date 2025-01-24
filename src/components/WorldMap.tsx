@@ -11,16 +11,16 @@ interface WorldMapProps {
 
 const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
+  const mapInstance = useRef<mapboxgl.Map | null>(null);
+  const markerInstance = useRef<mapboxgl.Marker | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || mapInstance.current) return;
 
     // Initialize map
     mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN'; // Replace with your Mapbox token
     
-    map.current = new mapboxgl.Map({
+    const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/navigation-night-v1',
       projection: 'globe',
@@ -30,7 +30,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     });
 
     // Add navigation controls
-    map.current.addControl(
+    map.addControl(
       new mapboxgl.NavigationControl({
         visualizePitch: true,
       }),
@@ -38,8 +38,8 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     );
 
     // Add atmosphere and fog effects
-    map.current.on('style.load', () => {
-      map.current?.setFog({
+    map.on('style.load', () => {
+      map.setFog({
         color: 'rgb(23, 25, 37)',
         'high-color': 'rgb(36, 37, 49)',
         'horizon-blend': 0.2,
@@ -50,27 +50,39 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       el.className = 'iss-marker';
       el.innerHTML = '⊕';
       
-      marker.current = new mapboxgl.Marker(el)
+      const marker = new mapboxgl.Marker(el)
         .setLngLat([0, 0])
-        .addTo(map.current);
+        .addTo(map);
+
+      markerInstance.current = marker;
     });
 
+    mapInstance.current = map;
+
+    // Cleanup function
     return () => {
-      map.current?.remove();
+      if (markerInstance.current) {
+        markerInstance.current.remove();
+        markerInstance.current = null;
+      }
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
     };
   }, []);
 
   // Update ISS position
   useEffect(() => {
-    if (issLocation && map.current && marker.current) {
-      marker.current.setLngLat([issLocation.longitude, issLocation.latitude]);
-      
-      // Smoothly animate to new position
-      map.current.easeTo({
-        center: [issLocation.longitude, issLocation.latitude],
-        duration: 2000,
-      });
-    }
+    if (!issLocation || !mapInstance.current || !markerInstance.current) return;
+
+    markerInstance.current.setLngLat([issLocation.longitude, issLocation.latitude]);
+    
+    // Smoothly animate to new position
+    mapInstance.current.easeTo({
+      center: [issLocation.longitude, issLocation.latitude],
+      duration: 2000,
+    });
   }, [issLocation]);
 
   return (
