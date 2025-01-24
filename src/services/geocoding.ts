@@ -13,18 +13,19 @@ export const getDefaultLocation = () => BERLIN_COORDS;
 
 export const geocodeLocation = async (location: string): Promise<GeocodingResult> => {
   try {
-    // For now, return default Berlin coordinates since we don't have a valid API key
-    // In a production environment, you would use a proper geocoding service
-    console.log(`Geocoding request for location: ${location}`);
-    return {
-      ...BERLIN_COORDS,
-      error: "Using default location (Berlin, Germany) - Geocoding service not configured."
-    };
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`);
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon)
+      };
+    }
+
+    throw new Error('Location not found');
   } catch (error) {
     console.error('Geocoding error:', error);
-    return {
-      ...BERLIN_COORDS,
-      error: "Error fetching location. Using default location (Berlin, Germany)."
-    };
+    throw error;
   }
 };
