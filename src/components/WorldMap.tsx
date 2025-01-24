@@ -64,7 +64,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       
       // Update trajectory
       positions.current.push(newPosition);
-      if (positions.current.length > 1200) { // Keep approximately 100 minutes of data (5s updates)
+      if (positions.current.length > 1200) {
         positions.current.shift();
       }
       trajectory.current.setLatLngs(positions.current);

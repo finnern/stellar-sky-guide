@@ -10,7 +10,8 @@ const ISSTrajectory = ({ map, positions }: ISSTrajectoryProps) => {
   return L.polyline(positions, { 
     color: '#33C3F0',
     weight: 2,
-    opacity: 0.6
+    opacity: 0.6,
+    smoothFactor: 1.5
   }).addTo(map);
 };
 
