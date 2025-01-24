@@ -11,69 +11,72 @@ interface WorldMapProps {
 
 const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const markerInstance = useRef<mapboxgl.Marker | null>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const marker = useRef<mapboxgl.Marker | null>(null);
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || mapInstance.current) return;
+    if (!mapContainer.current || map.current) return;
 
-    // Initialize Mapbox with a valid token
     mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
     
-    const map = new mapboxgl.Map({
+    const newMap = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/navigation-night-v1', // Dark theme
+      style: 'mapbox://styles/mapbox/navigation-night-v1',
       projection: 'globe',
       zoom: 1.5,
       center: [0, 0],
       pitch: 45,
     });
 
-    map.on('style.load', () => {
-      // Set fog effect for better atmosphere
-      map.setFog({
-        color: 'rgb(23, 25, 37)', // Dark blue fog
+    newMap.on('style.load', () => {
+      if (!map.current) return;
+      
+      map.current.setFog({
+        color: 'rgb(23, 25, 37)',
         'high-color': 'rgb(36, 37, 49)',
         'horizon-blend': 0.2,
       });
 
-      // Create custom ISS marker
+      // Create ISS marker
       const el = document.createElement('div');
       el.className = 'iss-marker';
-      el.innerHTML = '⊕'; // ISS symbol
-      markerInstance.current = new mapboxgl.Marker(el)
+      el.innerHTML = '⊕';
+      
+      if (marker.current) {
+        marker.current.remove();
+      }
+      
+      marker.current = new mapboxgl.Marker(el)
         .setLngLat([0, 0])
-        .addTo(map);
+        .addTo(map.current);
     });
 
-    mapInstance.current = map;
+    map.current = newMap;
 
-    // Cleanup
     return () => {
-      if (markerInstance.current) {
-        markerInstance.current.remove();
-        markerInstance.current = null;
+      if (marker.current) {
+        marker.current.remove();
+        marker.current = null;
       }
-      map.remove();
-      mapInstance.current = null;
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
   // Update ISS position
   useEffect(() => {
-    if (!issLocation || !mapInstance.current || !markerInstance.current) return;
+    if (!issLocation || !map.current || !marker.current) return;
 
     const { longitude, latitude } = issLocation;
     
-    // Update marker position
-    markerInstance.current.setLngLat([longitude, latitude]);
+    // Update marker position without creating new instances
+    marker.current.setLngLat([longitude, latitude]);
     
-    // Smoothly move map to new position
-    mapInstance.current.easeTo({
-      center: [longitude, latitude],
-      duration: 2000,
-    });
+    // Use a simple center update to avoid complex state
+    map.current.setCenter([longitude, latitude]);
   }, [issLocation]);
 
   return (
@@ -88,6 +91,20 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
           }
           .mapboxgl-canvas {
             border-radius: 0.5rem;
+          }
+          @keyframes pulse-slow {
+            0% {
+              opacity: 0.6;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 1;
+              transform: scale(1.2);
+            }
+            100% {
+              opacity: 0.6;
+              transform: scale(1);
+            }
           }
         `}
       </style>
