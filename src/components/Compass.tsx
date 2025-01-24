@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { calculateBearing, getCardinalDirection, requestOrientationPermission } from '@/utils/compassUtils';
+import { calculateBearing, getCardinalDirection } from '@/utils/compassUtils';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 interface CompassProps {
   userLocation: { lat: number; lon: number };
@@ -28,54 +28,39 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
   // Request device orientation permission and setup
   const setupDeviceOrientation = async () => {
     console.log("Setting up device orientation...");
-    
-    if ('DeviceOrientationEvent' in window) {
-      console.log("Device supports orientation events");
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      console.log("Device supports permission requests for orientation events");
       try {
-        const granted = await requestOrientationPermission();
-        console.log("Permission status:", granted);
-        setPermissionGranted(granted);
-        setHasOrientationSupport(true);
-
-        if (granted) {
-          const handleOrientation = (event: DeviceOrientationEvent) => {
-            console.log("Orientation event received:", {
-              alpha: event.alpha,
-              beta: event.beta,
-              gamma: event.gamma
-            });
-            
-            if (event.alpha !== null) {
-              setDeviceOrientation(event.alpha);
-            }
-          };
-
-          window.addEventListener('deviceorientation', handleOrientation, true);
-          
-          toast({
-            title: "Orientation Tracking Active",
-            description: "Your device will now point to the ISS location.",
-          });
-
-          return () => {
-            window.removeEventListener('deviceorientation', handleOrientation, true);
-          };
+        const permission = await (DeviceOrientationEvent as any).requestPermission();
+        if (permission === 'granted') {
+          console.log("Orientation permission granted");
+          setPermissionGranted(true);
+          setHasOrientationSupport(true);
+          initializeOrientationTracking();
         } else {
-          console.log("Permission denied for orientation tracking");
+          console.log("Orientation permission denied");
+          setPermissionGranted(false);
           toast({
             title: "Permission Denied",
-            description: "Please enable motion sensors in your device settings to use this feature.",
+            description: "Please enable motion sensors in your device settings.",
             variant: "destructive",
           });
         }
       } catch (error) {
-        console.error("Error setting up orientation:", error);
+        console.error("Error requesting orientation permission:", error);
         toast({
-          title: "Setup Error",
-          description: "Failed to setup orientation tracking. Please try again.",
+          title: "Permission Request Error",
+          description: "An error occurred requesting permissions.",
           variant: "destructive",
         });
+        setHasOrientationSupport(false);
       }
+    } else if ('DeviceOrientationEvent' in window) {
+      console.log("Device supports orientation events (no permission needed)");
+      setHasOrientationSupport(true);
+      setPermissionGranted(true);
+      initializeOrientationTracking();
     } else {
       console.log("Device does not support orientation events");
       setHasOrientationSupport(false);
@@ -86,6 +71,36 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
       });
     }
   };
+
+  const initializeOrientationTracking = () => {
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      console.log("Orientation event received:", {
+        alpha: event.alpha,
+        beta: event.beta,
+        gamma: event.gamma
+      });
+      
+      if (event.alpha !== null) {
+        setDeviceOrientation(event.alpha);
+      }
+    };
+
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    
+    toast({
+      title: "Orientation Tracking Active",
+      description: "Your device will now point to the ISS location.",
+    });
+  };
+
+  // Cleanup orientation tracking on unmount
+  useEffect(() => {
+    return () => {
+      if (permissionGranted) {
+        window.removeEventListener('deviceorientation', () => {}, true);
+      }
+    };
+  }, [permissionGranted]);
 
   // Calculate the final rotation including device orientation
   const finalRotation = permissionGranted
