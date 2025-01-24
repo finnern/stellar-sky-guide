@@ -82,7 +82,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       });
 
       // Keep only positions from the last 90 minutes
-      const ninetyMinutesAgo = Date.now() - 5400000;
+      const ninetyMinutesAgo = Date.now() - 5400000; // 90 minutes in milliseconds
       positions.current = positions.current.filter(pos => pos.timestamp > ninetyMinutesAgo);
       
       // Remove old trajectory and create new one
