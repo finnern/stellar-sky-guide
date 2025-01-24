@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { initializeMap, setupMapEffects, createISSMarker } from '../utils/mapUtils';
 
 interface WorldMapProps {
   issLocation: {
@@ -18,35 +19,13 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/navigation-night-v1',
-      projection: 'globe',
-      zoom: 1.5,
-      center: [0, 0],
-      pitch: 45,
-    });
-
-    // Create marker only once
-    const el = document.createElement('div');
-    el.className = 'iss-marker';
-    el.innerHTML = '⊕';
-    
-    marker.current = new mapboxgl.Marker(el)
-      .setLngLat([0, 0])
-      .addTo(map.current);
+    map.current = initializeMap(mapContainer.current);
+    marker.current = createISSMarker(map.current);
 
     // Add fog effect after style loads
     map.current.on('style.load', () => {
       if (!map.current) return;
-      
-      map.current.setFog({
-        color: 'rgb(23, 25, 37)',
-        'high-color': 'rgb(36, 37, 49)',
-        'horizon-blend': 0.2,
-      });
+      setupMapEffects(map.current);
     });
 
     // Cleanup function

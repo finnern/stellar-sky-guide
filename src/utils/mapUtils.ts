@@ -1,6 +1,5 @@
 import mapboxgl from 'mapbox-gl';
 
-// Initialize map with container
 export const initializeMap = (container: HTMLDivElement): mapboxgl.Map => {
   mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
   
@@ -14,7 +13,6 @@ export const initializeMap = (container: HTMLDivElement): mapboxgl.Map => {
   });
 };
 
-// Setup map effects
 export const setupMapEffects = (map: mapboxgl.Map) => {
   map.setFog({
     color: 'rgb(23, 25, 37)',
@@ -23,7 +21,6 @@ export const setupMapEffects = (map: mapboxgl.Map) => {
   });
 };
 
-// Create ISS marker
 export const createISSMarker = (map: mapboxgl.Map): mapboxgl.Marker => {
   const el = document.createElement('div');
   el.className = 'iss-marker';
