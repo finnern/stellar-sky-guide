@@ -51,7 +51,7 @@ const Index = () => {
     <div className="min-h-screen bg-space-black text-white p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-space-blue mb-2">Stellar Compass</h1>
+          <h1 className="text-4xl font-bold text-space-blue mb-2">Stellar ISS Compass</h1>
           <p className="text-lg text-gray-300">Track the International Space Station in real-time</p>
         </header>
 

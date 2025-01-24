@@ -18,12 +18,12 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   useEffect(() => {
     if (!mapContainer.current || mapInstance.current) return;
 
-    // Initialize Mapbox
+    // Initialize Mapbox with a valid token
     mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
     
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/navigation-night-v1',
+      style: 'mapbox://styles/mapbox/navigation-night-v1', // Dark theme
       projection: 'globe',
       zoom: 1.5,
       center: [0, 0],
@@ -31,17 +31,17 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     });
 
     map.on('style.load', () => {
-      // Set fog effect
+      // Set fog effect for better atmosphere
       map.setFog({
-        color: 'rgb(23, 25, 37)',
+        color: 'rgb(23, 25, 37)', // Dark blue fog
         'high-color': 'rgb(36, 37, 49)',
         'horizon-blend': 0.2,
       });
 
-      // Create ISS marker
+      // Create custom ISS marker
       const el = document.createElement('div');
       el.className = 'iss-marker';
-      el.innerHTML = '⊕';
+      el.innerHTML = '⊕'; // ISS symbol
       markerInstance.current = new mapboxgl.Marker(el)
         .setLngLat([0, 0])
         .addTo(map);
@@ -49,6 +49,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
 
     mapInstance.current = map;
 
+    // Cleanup
     return () => {
       if (markerInstance.current) {
         markerInstance.current.remove();
@@ -64,8 +65,11 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     if (!issLocation || !mapInstance.current || !markerInstance.current) return;
 
     const { longitude, latitude } = issLocation;
+    
+    // Update marker position
     markerInstance.current.setLngLat([longitude, latitude]);
     
+    // Smoothly move map to new position
     mapInstance.current.easeTo({
       center: [longitude, latitude],
       duration: 2000,
@@ -80,6 +84,7 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
             font-size: 24px;
             color: #33C3F0;
             cursor: pointer;
+            animation: pulse-slow 2s infinite;
           }
           .mapboxgl-canvas {
             border-radius: 0.5rem;
