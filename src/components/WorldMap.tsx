@@ -14,13 +14,13 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
 
-  // Initialize map
+  // Initialize map only once
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
     mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHMxYXB5YmkwMGR1MmpxdDZ4NHJqZm9rIn0.Sj6ZTDPGiXkU5XaQPZj7PA';
     
-    const newMap = new mapboxgl.Map({
+    map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/navigation-night-v1',
       projection: 'globe',
@@ -29,7 +29,17 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       pitch: 45,
     });
 
-    newMap.on('style.load', () => {
+    // Create marker only once
+    const el = document.createElement('div');
+    el.className = 'iss-marker';
+    el.innerHTML = '⊕';
+    
+    marker.current = new mapboxgl.Marker(el)
+      .setLngLat([0, 0])
+      .addTo(map.current);
+
+    // Add fog effect after style loads
+    map.current.on('style.load', () => {
       if (!map.current) return;
       
       map.current.setFog({
@@ -37,46 +47,34 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
         'high-color': 'rgb(36, 37, 49)',
         'horizon-blend': 0.2,
       });
-
-      // Create ISS marker
-      const el = document.createElement('div');
-      el.className = 'iss-marker';
-      el.innerHTML = '⊕';
-      
-      if (marker.current) {
-        marker.current.remove();
-      }
-      
-      marker.current = new mapboxgl.Marker(el)
-        .setLngLat([0, 0])
-        .addTo(map.current);
     });
 
-    map.current = newMap;
-
+    // Cleanup function
     return () => {
       if (marker.current) {
         marker.current.remove();
-        marker.current = null;
       }
       if (map.current) {
         map.current.remove();
-        map.current = null;
       }
     };
   }, []);
 
-  // Update ISS position
+  // Update ISS position in a separate effect
   useEffect(() => {
     if (!issLocation || !map.current || !marker.current) return;
 
     const { longitude, latitude } = issLocation;
     
-    // Update marker position without creating new instances
+    // Update marker position
     marker.current.setLngLat([longitude, latitude]);
     
-    // Use a simple center update to avoid complex state
-    map.current.setCenter([longitude, latitude]);
+    // Update map center with animation
+    map.current.easeTo({
+      center: [longitude, latitude],
+      duration: 1500,
+      essential: true
+    });
   }, [issLocation]);
 
   return (
