@@ -1,32 +1,35 @@
-import mapboxgl from 'mapbox-gl';
+import L from 'leaflet';
 
-export const initializeMap = (container: HTMLDivElement, accessToken: string): mapboxgl.Map => {
-  mapboxgl.accessToken = accessToken;
-  
-  return new mapboxgl.Map({
-    container,
-    style: 'mapbox://styles/mapbox/navigation-night-v1',
-    projection: 'globe',
-    zoom: 1.5,
-    center: [0, 0],
-    pitch: 45,
-  });
+export const initializeMap = (container: HTMLElement): L.Map => {
+  const map = L.map(container).setView([52.52, 13.405], 3);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  return map;
 };
 
-export const setupMapEffects = (map: mapboxgl.Map) => {
-  map.setFog({
-    color: 'rgb(23, 25, 37)',
-    'high-color': 'rgb(36, 37, 49)',
-    'horizon-blend': 0.2,
+export const createISSMarker = (map: L.Map): L.Marker => {
+  const issIcon = L.divIcon({
+    className: 'iss-marker',
+    html: '⊕',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
   });
+
+  return L.marker([0, 0], { icon: issIcon }).addTo(map);
 };
 
-export const createISSMarker = (map: mapboxgl.Map): mapboxgl.Marker => {
-  const el = document.createElement('div');
-  el.className = 'iss-marker';
-  el.innerHTML = '⊕';
-  
-  return new mapboxgl.Marker(el)
-    .setLngLat([0, 0])
-    .addTo(map);
+export const updateMarkerPosition = (
+  map: L.Map,
+  marker: L.Marker,
+  position: { latitude: number; longitude: number }
+) => {
+  const { latitude, longitude } = position;
+  marker.setLatLng([latitude, longitude]);
+  map.panTo([latitude, longitude], { 
+    animate: true,
+    duration: 1.5 
+  });
 };
