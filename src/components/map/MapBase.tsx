@@ -21,11 +21,13 @@ const MapBase = ({ container }: MapBaseProps) => {
     ],
     view: new View({
       center: fromLonLat([0, 0]),
-      zoom: 1.5,
-      minZoom: 1.5,
-      maxZoom: 8,
-      extent: [-20026376.39, -20048966.10, 20026376.39, 20048966.10],
+      zoom: 1.8,
+      minZoom: 1.8,
+      maxZoom: 1.8,
+      enableRotation: false,
     }),
+    controls: [],
+    interactions: [],
   });
 
   return map;

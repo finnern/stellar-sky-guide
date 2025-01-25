@@ -28,7 +28,8 @@ const ISSMarker = ({ map, position }: ISSMarkerProps) => {
     style: new Style({
       image: new Icon({
         src: '/iss-icon.svg',
-        scale: 0.5
+        scale: 0.03,
+        rotation: Math.PI / 4
       })
     })
   });

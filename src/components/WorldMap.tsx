@@ -1,11 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Map } from 'ol';
 import 'ol/ol.css';
 import { toast } from '@/components/ui/use-toast';
 import MapBase from './map/MapBase';
 import ISSMarker from './map/ISSMarker';
-import ISSTrajectory from './map/ISSTrajectory';
 import { transform } from 'ol/proj';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import LineString from 'ol/geom/LineString';
+import Feature from 'ol/Feature';
+import { Style, Stroke } from 'ol/style';
 
 interface WorldMapProps {
   issLocation: {
@@ -16,9 +20,13 @@ interface WorldMapProps {
   } | null;
 }
 
+const MAX_PATH_POINTS = 50;
+
 const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
+  const [pathPoints, setPathPoints] = useState<number[][]>([]);
+  const pathLayer = useRef<VectorLayer<VectorSource>>();
 
   // Initialize map
   useEffect(() => {
@@ -28,9 +36,19 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       map.current = MapBase({ container: mapContainer.current });
       console.log('Map initialized');
       
-      // Set initial view
-      map.current.getView().setZoom(1.5);
-      map.current.getView().setCenter(transform([0, 0], 'EPSG:4326', 'EPSG:3857'));
+      // Create path layer
+      const vectorSource = new VectorSource();
+      pathLayer.current = new VectorLayer({
+        source: vectorSource,
+        style: new Style({
+          stroke: new Stroke({
+            color: '#33C3F0',
+            width: 2
+          })
+        })
+      });
+      
+      map.current.addLayer(pathLayer.current);
     } catch (error) {
       console.error('Map initialization error:', error);
       toast({
@@ -48,16 +66,13 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     };
   }, []);
 
-  // Update ISS position and trajectory
+  // Update ISS position and path
   useEffect(() => {
-    if (!issLocation || !map.current) {
-      console.log('Skipping update - no issLocation or map:', { issLocation, map: !!map.current });
+    if (!issLocation || !map.current || !pathLayer.current) {
       return;
     }
 
     try {
-      console.log('Updating ISS position:', issLocation);
-      
       // Transform coordinates for display
       const transformedCoord = transform(
         [issLocation.longitude, issLocation.latitude], 
@@ -71,11 +86,23 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
         position: transformedCoord
       });
       
-      // Update trajectory
-      ISSTrajectory({ 
-        map: map.current, 
-        issLocation
+      // Update path points
+      setPathPoints(prevPoints => {
+        const newPoints = [...prevPoints, transformedCoord];
+        return newPoints.slice(-MAX_PATH_POINTS);
       });
+
+      // Update path layer
+      if (pathPoints.length > 1) {
+        const lineString = new LineString(pathPoints);
+        const feature = new Feature(lineString);
+        
+        pathLayer.current.setSource(
+          new VectorSource({
+            features: [feature]
+          })
+        );
+      }
 
     } catch (error) {
       console.error('Position update error:', error);
