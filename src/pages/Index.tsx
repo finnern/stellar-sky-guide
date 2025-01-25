@@ -72,9 +72,11 @@ const Index = () => {
         <LocationInput onLocationSubmit={handleLocationSubmit} />
 
         {/* World Map */}
-        <WorldMap issLocation={issLocation ?? null} />
+        <WorldMap 
+          issLocation={issLocation ?? null} 
+          userLocation={userLocation}
+        />
 
-        {/* Current ISS Status */}
         {issLocation && (
           <div className="glass-card p-6">
             <h2 className="text-xl font-bold text-space-blue mb-4">Current ISS Status</h2>

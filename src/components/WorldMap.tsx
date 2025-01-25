@@ -9,7 +9,8 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import LineString from 'ol/geom/LineString';
 import Feature from 'ol/Feature';
-import { Style, Stroke } from 'ol/style';
+import { Style, Stroke, Circle, Fill } from 'ol/style';
+import Point from 'ol/geom/Point';
 
 interface WorldMapProps {
   issLocation: {
@@ -18,15 +19,17 @@ interface WorldMapProps {
     velocity: number;
     altitude: number;
   } | null;
+  userLocation?: { lat: number; lon: number } | null;
 }
 
 const MAX_PATH_POINTS = 50;
 
-const WorldMap = ({ issLocation }: WorldMapProps) => {
+const WorldMap = ({ issLocation, userLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
   const [pathPoints, setPathPoints] = useState<number[][]>([]);
   const pathLayer = useRef<VectorLayer<VectorSource>>();
+  const userLocationLayer = useRef<VectorLayer<VectorSource>>();
 
   // Initialize map
   useEffect(() => {
@@ -36,14 +39,14 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       map.current = MapBase({ container: mapContainer.current });
       console.log('Map initialized');
       
-      // Create path layer
+      // Create path layer with updated styling
       const vectorSource = new VectorSource();
       pathLayer.current = new VectorLayer({
         source: vectorSource,
         style: new Style({
           stroke: new Stroke({
-            color: '#33C3F0',
-            width: 2
+            color: 'rgba(51, 195, 240, 0.6)',
+            width: 1.5
           })
         })
       });
@@ -65,6 +68,45 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       }
     };
   }, []);
+
+  // Update user location marker
+  useEffect(() => {
+    if (!map.current || !userLocation) return;
+
+    // Remove existing user location layer
+    if (userLocationLayer.current) {
+      map.current.removeLayer(userLocationLayer.current);
+    }
+
+    try {
+      const transformedCoord = transform(
+        [userLocation.lon, userLocation.lat],
+        'EPSG:4326',
+        'EPSG:3857'
+      );
+
+      const locationFeature = new Feature({
+        geometry: new Point(transformedCoord)
+      });
+
+      userLocationLayer.current = new VectorLayer({
+        source: new VectorSource({
+          features: [locationFeature]
+        }),
+        style: new Style({
+          image: new Circle({
+            radius: 6,
+            fill: new Fill({ color: '#ff4444' }),
+            stroke: new Stroke({ color: '#ffffff', width: 2 })
+          })
+        })
+      });
+
+      map.current.addLayer(userLocationLayer.current);
+    } catch (error) {
+      console.error('User location update error:', error);
+    }
+  }, [userLocation]);
 
   // Update ISS position and path
   useEffect(() => {

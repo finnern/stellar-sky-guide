@@ -27,9 +27,9 @@ const ISSMarker = ({ map, position }: ISSMarkerProps) => {
     }),
     style: new Style({
       image: new Icon({
-        src: '/iss-icon.svg',
-        scale: 0.03,
-        rotation: Math.PI / 4
+        src: '/lovable-uploads/cee69201-adcb-4828-8a41-7b2b6fe68e8f.png',
+        scale: 0.5,
+        anchor: [0.5, 0.5]
       })
     })
   });
