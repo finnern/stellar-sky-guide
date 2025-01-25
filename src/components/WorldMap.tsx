@@ -45,8 +45,8 @@ const WorldMap = ({ issLocation, userLocation }: WorldMapProps) => {
         source: vectorSource,
         style: new Style({
           stroke: new Stroke({
-            color: 'rgba(51, 195, 240, 0.6)',
-            width: 1.5
+            color: 'rgba(51, 195, 240, 0.8)',
+            width: 2
           })
         })
       });
@@ -96,7 +96,7 @@ const WorldMap = ({ issLocation, userLocation }: WorldMapProps) => {
         style: new Style({
           image: new Circle({
             radius: 6,
-            fill: new Fill({ color: '#ff4444' }),
+            fill: new Fill({ color: '#33C3F0' }),
             stroke: new Stroke({ color: '#ffffff', width: 2 })
           })
         })
