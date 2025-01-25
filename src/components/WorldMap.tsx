@@ -11,6 +11,8 @@ interface WorldMapProps {
   issLocation: {
     latitude: number;
     longitude: number;
+    velocity: number;
+    altitude: number;
   } | null;
 }
 
@@ -19,8 +21,6 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
   const map = useRef<Map | null>(null);
   const marker = useRef<any>(null);
   const trajectory = useRef<any>(null);
-  const positions = useRef<Array<{coords: [number, number], timestamp: number}>>([]);
-  const isFirstPosition = useRef<boolean>(true);
 
   // Initialize map
   useEffect(() => {
@@ -56,11 +56,12 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     try {
       console.log('Updating ISS position:', issLocation);
       
-      // Store coordinates in EPSG:4326 (lat/lon) format
-      const newPosition: [number, number] = [issLocation.longitude, issLocation.latitude];
-      
       // Transform coordinates for display
-      const transformedCoord = transform(newPosition, 'EPSG:4326', 'EPSG:3857') as [number, number];
+      const transformedCoord = transform(
+        [issLocation.longitude, issLocation.latitude], 
+        'EPSG:4326', 
+        'EPSG:3857'
+      ) as [number, number];
       
       console.log('Transformed position:', transformedCoord);
 
@@ -78,20 +79,6 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
         });
       }
       
-      // Update trajectory
-      positions.current.push({
-        coords: newPosition,
-        timestamp: Date.now()
-      });
-
-      console.log('Updated positions array:', positions.current);
-
-      // Keep only positions from the last 90 minutes
-      const ninetyMinutesAgo = Date.now() - 5400000;
-      positions.current = positions.current.filter(pos => pos.timestamp > ninetyMinutesAgo);
-      
-      console.log('Filtered positions array length:', positions.current.length);
-      
       // Remove old trajectory and create new one
       if (trajectory.current) {
         console.log('Removing old trajectory');
@@ -101,15 +88,14 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
       console.log('Creating new trajectory');
       trajectory.current = ISSTrajectory({ 
         map: map.current, 
-        positions: positions.current 
+        issLocation
       });
       
-      // Center map on ISS if it's the first position
-      if (isFirstPosition.current) {
+      // Center map on first position
+      if (!trajectory.current) {
         console.log('First position - centering map');
         map.current.getView().setCenter(transformedCoord);
-        map.current.getView().setZoom(4);
-        isFirstPosition.current = false;
+        map.current.getView().setZoom(1.5);
       }
     } catch (error) {
       console.error('Position update error:', error);
