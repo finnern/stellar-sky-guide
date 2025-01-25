@@ -19,8 +19,6 @@ interface WorldMapProps {
 const WorldMap = ({ issLocation }: WorldMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
-  const marker = useRef<any>(null);
-  const trajectory = useRef<any>(null);
 
   // Initialize map
   useEffect(() => {
@@ -29,6 +27,10 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
     try {
       map.current = MapBase({ container: mapContainer.current });
       console.log('Map initialized');
+      
+      // Set initial view
+      map.current.getView().setZoom(1.5);
+      map.current.getView().setCenter(transform([0, 0], 'EPSG:4326', 'EPSG:3857'));
     } catch (error) {
       console.error('Map initialization error:', error);
       toast({
@@ -61,42 +63,20 @@ const WorldMap = ({ issLocation }: WorldMapProps) => {
         [issLocation.longitude, issLocation.latitude], 
         'EPSG:4326', 
         'EPSG:3857'
-      ) as [number, number];
-      
-      console.log('Transformed position:', transformedCoord);
+      );
 
-      // Update or create marker
-      if (marker.current) {
-        console.log('Updating existing marker');
-        const source = marker.current.getSource();
-        const feature = source.getFeatures()[0];
-        feature.getGeometry().setCoordinates(transformedCoord);
-      } else {
-        console.log('Creating new marker');
-        marker.current = ISSMarker({ 
-          map: map.current, 
-          position: transformedCoord
-        });
-      }
+      // Update marker
+      ISSMarker({ 
+        map: map.current, 
+        position: transformedCoord
+      });
       
-      // Remove old trajectory and create new one
-      if (trajectory.current) {
-        console.log('Removing old trajectory');
-        map.current.removeLayer(trajectory.current);
-      }
-      
-      console.log('Creating new trajectory');
-      trajectory.current = ISSTrajectory({ 
+      // Update trajectory
+      ISSTrajectory({ 
         map: map.current, 
         issLocation
       });
-      
-      // Center map on first position
-      if (!trajectory.current) {
-        console.log('First position - centering map');
-        map.current.getView().setCenter(transformedCoord);
-        map.current.getView().setZoom(1.5);
-      }
+
     } catch (error) {
       console.error('Position update error:', error);
       toast({
