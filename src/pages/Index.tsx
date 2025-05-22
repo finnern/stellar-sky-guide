@@ -6,10 +6,14 @@ import LocationInput from '../components/LocationInput';
 import Compass from '../components/Compass';
 import WorldMap from '../components/WorldMap';
 import { toast } from '@/components/ui/use-toast';
+import { getDefaultLocation } from '../services/geocoding';
 
 const Index = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [nextPass, setNextPass] = useState<Date | null>(null);
+
+  // Use Berlin as default if userLocation is null
+  const currentLocation = userLocation || getDefaultLocation();
 
   const { data: issLocation, error } = useQuery({
     queryKey: ['issLocation'],
@@ -28,16 +32,16 @@ const Index = () => {
   }, [error]);
 
   useEffect(() => {
-    if (issLocation && userLocation) {
+    if (issLocation && currentLocation) {
       const nextPassTime = calculateNextPass(
         issLocation.latitude,
         issLocation.longitude,
-        userLocation.lat,
-        userLocation.lon
+        currentLocation.lat,
+        currentLocation.lon
       );
       setNextPass(nextPassTime);
     }
-  }, [issLocation, userLocation]);
+  }, [issLocation, currentLocation]);
 
   const handleLocationSubmit = (lat: number, lon: number) => {
     setUserLocation({ lat, lon });
@@ -55,26 +59,32 @@ const Index = () => {
           <p className="text-lg text-gray-300">Track the International Space Station in real-time</p>
         </header>
 
+        {/* Show current coordinates */}
+        <div className="glass-card p-4 mb-4 text-center">
+          <div className="text-gray-400">Currently used coordinates:</div>
+          <div className="text-lg font-bold">{currentLocation.lat.toFixed(4)}°, {currentLocation.lon.toFixed(4)}°</div>
+        </div>
+
         {/* Next Pass Component */}
         {nextPass && (
           <Countdown targetDate={nextPass} />
         )}
 
         {/* Compass Component */}
-        {issLocation && userLocation && (
+        {issLocation && currentLocation && (
           <Compass 
-            userLocation={userLocation}
+            userLocation={currentLocation}
             issLocation={issLocation}
           />
         )}
 
         {/* Location Input */}
-        <LocationInput onLocationSubmit={handleLocationSubmit} />
+        <LocationInput onLocationSubmit={handleLocationSubmit} currentLocation={currentLocation} />
 
         {/* World Map */}
         <WorldMap 
           issLocation={issLocation ?? null} 
-          userLocation={userLocation}
+          userLocation={currentLocation}
         />
 
         {issLocation && (

@@ -11,6 +11,7 @@ import LineString from 'ol/geom/LineString';
 import Feature from 'ol/Feature';
 import { Style, Stroke, Circle, Fill } from 'ol/style';
 import Point from 'ol/geom/Point';
+import ISSTrajectory from './map/ISSTrajectory';
 
 interface WorldMapProps {
   issLocation: {
@@ -145,6 +146,9 @@ const WorldMap = ({ issLocation, userLocation }: WorldMapProps) => {
           })
         );
       }
+
+      // Render ISS trajectory for the past hour
+      ISSTrajectory({ map: map.current, issLocation });
 
     } catch (error) {
       console.error('Position update error:', error);

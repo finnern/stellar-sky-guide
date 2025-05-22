@@ -4,12 +4,17 @@ import CoordinatesInput from './location/CoordinatesInput';
 
 interface LocationInputProps {
   onLocationSubmit: (lat: number, lon: number) => void;
+  currentLocation: { lat: number; lon: number };
 }
 
-const LocationInput = ({ onLocationSubmit }: LocationInputProps) => {
+const LocationInput = ({ onLocationSubmit, currentLocation }: LocationInputProps) => {
   return (
     <div className="glass-card p-6">
       <h2 className="text-xl font-bold text-space-blue mb-4">Enter Location</h2>
+      <div className="mb-4 text-center">
+        <div className="text-gray-400">Current Coordinates:</div>
+        <div className="text-lg font-bold">{currentLocation.lat.toFixed(4)}°, {currentLocation.lon.toFixed(4)}°</div>
+      </div>
       <Tabs defaultValue="city" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="city">City, Country</TabsTrigger>
