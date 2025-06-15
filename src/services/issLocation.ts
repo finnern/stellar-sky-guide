@@ -24,9 +24,9 @@ export const getISSLocation = async (): Promise<ISSLocation> => {
       altitude: 0,
       velocity: 0,
       visibility: "unknown",
-      timestamp: Math.floor(Date.now() / 1000),
+      timestamp: Math.floor(Date.now() / 1000)
     };
-    return fallback;
+    return fallback as ISSLocation;
   }
 
   return result.data;
