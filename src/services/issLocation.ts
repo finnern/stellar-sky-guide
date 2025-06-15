@@ -17,8 +17,8 @@ export const getISSLocation = async (): Promise<ISSLocation> => {
   // Validate with Zod
   const result = issApiSchema.safeParse(rawData);
   if (!result.success) {
-    // Fall back to Berlin with zeroes for safety, all required properties present
-    return {
+    // Fall back to Berlin with zeroes for safety, all required properties present and non-optional
+    const fallback: ISSLocation = {
       latitude: 52.52,
       longitude: 13.405,
       altitude: 0,
@@ -26,6 +26,7 @@ export const getISSLocation = async (): Promise<ISSLocation> => {
       visibility: "unknown",
       timestamp: Math.floor(Date.now() / 1000),
     };
+    return fallback;
   }
 
   return result.data;
@@ -59,4 +60,3 @@ export const calculateNextPass = (
 
   return nextPass;
 };
-
