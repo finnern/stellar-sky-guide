@@ -1,3 +1,4 @@
+
 interface ISSLocation {
   latitude: number;
   longitude: number;
@@ -16,7 +17,7 @@ export const getISSLocation = async (): Promise<ISSLocation> => {
   // Validate with Zod
   const result = issApiSchema.safeParse(rawData);
   if (!result.success) {
-    // Fall back to Berlin with zeroes for safety
+    // Fall back to Berlin with zeroes for safety, all required properties present
     return {
       latitude: 52.52,
       longitude: 13.405,
@@ -58,3 +59,4 @@ export const calculateNextPass = (
 
   return nextPass;
 };
+
