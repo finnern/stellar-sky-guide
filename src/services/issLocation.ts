@@ -1,4 +1,3 @@
-
 interface ISSLocation {
   latitude: number;
   longitude: number;
@@ -17,8 +16,8 @@ export const getISSLocation = async (): Promise<ISSLocation> => {
   // Validate with Zod
   const result = issApiSchema.safeParse(rawData);
   if (!result.success) {
-    // Fall back to Berlin with zeroes for safety, all required properties present and non-optional
-    const fallback: ISSLocation = {
+    // Fall back to Berlin. Directly returning the object ensures it matches the ISSLocation type.
+    return {
       latitude: 52.52,
       longitude: 13.405,
       altitude: 0,
@@ -26,7 +25,6 @@ export const getISSLocation = async (): Promise<ISSLocation> => {
       visibility: "unknown",
       timestamp: Math.floor(Date.now() / 1000)
     };
-    return fallback as ISSLocation;
   }
 
   return result.data;
