@@ -7,18 +7,27 @@ interface ISSLocation {
   timestamp: number;
 }
 
+import { issApiSchema } from "@/utils/securitySchemas";
+
 export const getISSLocation = async (): Promise<ISSLocation> => {
   const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
-  const data = await response.json();
-  
-  return {
-    latitude: data.latitude,
-    longitude: data.longitude,
-    altitude: data.altitude,
-    velocity: data.velocity,
-    visibility: data.visibility,
-    timestamp: data.timestamp,
-  };
+  const rawData = await response.json();
+
+  // Validate with Zod
+  const result = issApiSchema.safeParse(rawData);
+  if (!result.success) {
+    // Fall back to Berlin with zeroes for safety
+    return {
+      latitude: 52.52,
+      longitude: 13.405,
+      altitude: 0,
+      velocity: 0,
+      visibility: "unknown",
+      timestamp: Math.floor(Date.now() / 1000),
+    };
+  }
+
+  return result.data;
 };
 
 // Calculate next pass time based on current ISS position and user location

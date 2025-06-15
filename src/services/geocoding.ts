@@ -9,23 +9,35 @@ const BERLIN_COORDS = {
   lon: 13.4050,
 };
 
+import { geoApiArraySchema } from "@/utils/securitySchemas";
+
 export const getDefaultLocation = () => BERLIN_COORDS;
 
 export const geocodeLocation = async (location: string): Promise<GeocodingResult> => {
   try {
     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`);
-    const data = await response.json();
+    const rawData = await response.json();
 
-    if (data && data.length > 0) {
+    // Validate shape of API response
+    const safeData = geoApiArraySchema.safeParse(rawData);
+    if (!safeData.success || safeData.data.length === 0) {
       return {
-        lat: parseFloat(data[0].lat),
-        lon: parseFloat(data[0].lon)
+        lat: BERLIN_COORDS.lat,
+        lon: BERLIN_COORDS.lon,
+        error: "Could not geocode this location."
       };
     }
 
-    throw new Error('Location not found');
+    return {
+      lat: parseFloat(safeData.data[0].lat),
+      lon: parseFloat(safeData.data[0].lon)
+    };
   } catch (error) {
     console.error('Geocoding error:', error);
-    throw error;
+    return {
+      lat: BERLIN_COORDS.lat,
+      lon: BERLIN_COORDS.lon,
+      error: "An error occurred while retrieving location."
+    };
   }
 };

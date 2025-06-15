@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { geocodeLocation } from '@/services/geocoding';
 import { toast } from "@/hooks/use-toast";
+import { cityInputSchema } from "@/utils/securitySchemas";
 
 interface CityInputProps {
   onLocationSubmit: (lat: number, lon: number) => void;
@@ -14,27 +15,44 @@ const CityInput = ({ onLocationSubmit }: CityInputProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Restrict input length and sanitize for allowed chars before sending
+    let sanitizedInput = cityCountry.trim().replace(/[^a-zA-Z0-9\s,\-'.]/g, "");
+    if (sanitizedInput.length > 100) sanitizedInput = sanitizedInput.slice(0, 100);
+
+    // Validate city input with schema
+    const validationResult = cityInputSchema.safeParse(sanitizedInput);
+    if (!validationResult.success) {
+      toast({
+        title: "Invalid Input",
+        description: validationResult.error.issues[0].message,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await geocodeLocation(cityCountry);
-      
+      const result = await geocodeLocation(sanitizedInput);
+
       if (result.error) {
         toast({
           title: "Location Notice",
-          description: result.error,
+          description: "Sorry, this location could not be found.",
         });
+        return;
       }
 
       onLocationSubmit(result.lat, result.lon);
       toast({
         title: "Location Updated",
-        description: `Location set to ${cityCountry}`,
+        description: `Location set to ${sanitizedInput}`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to get location coordinates.",
+        description: "There was a problem looking up this location.",
         variant: "destructive",
       });
     } finally {
