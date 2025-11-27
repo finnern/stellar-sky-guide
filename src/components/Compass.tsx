@@ -73,14 +73,17 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
   };
 
   const handleOrientation = (event: DeviceOrientationEvent) => {
-    console.log("Orientation event received:", {
-      alpha: event.alpha,
-      beta: event.beta,
-      gamma: event.gamma
-    });
+    // Use webkitCompassHeading for iOS (gives true north heading)
+    // Otherwise use alpha (device orientation from arbitrary north)
+    const webkitEvent = event as DeviceOrientationEvent & { webkitCompassHeading?: number };
     
-    if (event.alpha !== null) {
-      setDeviceOrientation(event.alpha);
+    if (webkitEvent.webkitCompassHeading !== undefined) {
+      // iOS: webkitCompassHeading is degrees from true north (0-360)
+      setDeviceOrientation(webkitEvent.webkitCompassHeading);
+    } else if (event.alpha !== null) {
+      // Android/other: alpha is degrees from device's initial orientation
+      // We need to convert to compass heading (360 - alpha for proper direction)
+      setDeviceOrientation(360 - event.alpha);
     }
   };
 
