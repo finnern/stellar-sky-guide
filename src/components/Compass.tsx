@@ -14,6 +14,25 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
   const [hasOrientationSupport, setHasOrientationSupport] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
 
+  // Check for orientation support on mount
+  useEffect(() => {
+    const checkOrientationSupport = () => {
+      // iOS 13+ requires permission request
+      if (typeof DeviceOrientationEvent !== 'undefined' && 
+          typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        setHasOrientationSupport(true);
+        return;
+      }
+      // Android/other browsers
+      if ('DeviceOrientationEvent' in window) {
+        setHasOrientationSupport(true);
+        return;
+      }
+      setHasOrientationSupport(false);
+    };
+    checkOrientationSupport();
+  }, []);
+
   // Calculate initial bearing
   useEffect(() => {
     const newBearing = calculateBearing(
