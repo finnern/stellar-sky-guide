@@ -150,8 +150,11 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
       )}
 
       <div className="relative w-48 h-48 mx-auto">
-        {/* Compass Rose */}
-        <div className="absolute inset-0 rounded-full border-2 border-space-blue/30">
+        {/* Compass Rose - rotates to keep N pointing to real north */}
+        <div 
+          className="absolute inset-0 rounded-full border-2 border-space-blue/30 transition-transform duration-100 ease-out"
+          style={{ transform: permissionGranted ? `rotate(${-deviceOrientation}deg)` : 'rotate(0deg)' }}
+        >
           {/* Cardinal Directions */}
           {['N', 'E', 'S', 'W'].map((direction) => (
             <div
@@ -166,26 +169,26 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
               {direction}
             </div>
           ))}
+        </div>
           
-          {/* Direction Arrow with smooth transition */}
-          <div
-            className="absolute inset-0 transition-transform duration-300 ease-out"
-            style={{ transform: `rotate(${finalRotation}deg)` }}
-          >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1/2 flex flex-col items-center">
-              <div className="w-4 h-4 bg-space-blue transform -translate-y-1/2 rotate-45" />
-              <div className="flex-1 w-0.5 bg-space-blue/50" />
-            </div>
+        {/* Direction Arrow - always points to ISS relative to screen */}
+        <div
+          className="absolute inset-0 transition-transform duration-100 ease-out pointer-events-none"
+          style={{ transform: `rotate(${finalRotation}deg)` }}
+        >
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1/2 flex flex-col items-center">
+            <div className="w-4 h-4 bg-space-blue transform -translate-y-1/2 rotate-45" />
+            <div className="flex-1 w-0.5 bg-space-blue/50" />
           </div>
         </div>
 
         {/* Direction Information */}
         <div className="text-center mt-4">
-          <p className="text-gray-400">ISS is {getCardinalDirection(bearing)}</p>
-          <p className="text-sm text-gray-500">{bearing.toFixed(1)}°</p>
+          <p className="text-gray-400">Point phone toward arrow to face ISS</p>
+          <p className="text-sm text-gray-500">ISS is {getCardinalDirection(bearing)} ({bearing.toFixed(0)}°)</p>
           {permissionGranted && (
-            <p className="text-sm text-gray-500">
-              Device heading: {deviceOrientation.toFixed(1)}°
+            <p className="text-xs text-gray-600">
+              Heading: {deviceOrientation.toFixed(0)}°
             </p>
           )}
         </div>
