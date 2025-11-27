@@ -27,7 +27,7 @@ export const getISSLocation = async (): Promise<ISSLocation> => {
     };
   }
 
-  return result.data;
+  return result.data as ISSLocation;
 };
 
 // Calculate next pass time based on current ISS position and user location
