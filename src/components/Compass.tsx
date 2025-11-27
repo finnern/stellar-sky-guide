@@ -88,21 +88,41 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
     const handleOrientation = (event: DeviceOrientationEvent) => {
       const webkitEvent = event as DeviceOrientationEvent & { webkitCompassHeading?: number };
       
-      console.log("Orientation event received:", {
-        alpha: event.alpha,
-        webkitCompassHeading: webkitEvent.webkitCompassHeading
-      });
+      // Log every 10th event to avoid spam
+      if (Math.random() < 0.1) {
+        console.log("Orientation event:", {
+          alpha: event.alpha,
+          webkitCompassHeading: webkitEvent.webkitCompassHeading,
+          absolute: event.absolute
+        });
+      }
 
       if (typeof webkitEvent.webkitCompassHeading === 'number') {
         // iOS: webkitCompassHeading is degrees from magnetic north
         setDeviceOrientation(webkitEvent.webkitCompassHeading);
       } else if (event.alpha !== null) {
-        // Android: convert alpha to compass heading
-        setDeviceOrientation((360 - event.alpha) % 360);
+        // Android/other: convert alpha to compass heading
+        // If absolute is true, alpha is relative to true north
+        // If false, it's relative to an arbitrary direction
+        const heading = event.absolute 
+          ? (360 - event.alpha) % 360 
+          : (360 - event.alpha) % 360;
+        setDeviceOrientation(heading);
       }
     };
 
-    window.addEventListener('deviceorientation', handleOrientation, true);
+    // Try absolute orientation first (more accurate), fall back to regular
+    const supportsAbsolute = 'ondeviceorientationabsolute' in window;
+    const eventName = supportsAbsolute ? 'deviceorientationabsolute' : 'deviceorientation';
+    
+    console.log(`Using ${eventName} event, supportsAbsolute: ${supportsAbsolute}`);
+    
+    window.addEventListener(eventName, handleOrientation as EventListener);
+    
+    // Also try regular deviceorientation as fallback
+    if (supportsAbsolute) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
     
     toast({
       title: "Orientation Active",
@@ -110,8 +130,11 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
     });
 
     return () => {
-      console.log("Removing orientation listener");
-      window.removeEventListener('deviceorientation', handleOrientation, true);
+      console.log("Removing orientation listeners");
+      window.removeEventListener(eventName, handleOrientation as EventListener);
+      if (supportsAbsolute) {
+        window.removeEventListener('deviceorientation', handleOrientation);
+      }
     };
   }, [permissionGranted]);
 
