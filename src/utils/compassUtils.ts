@@ -47,14 +47,26 @@ export const getCardinalDirection = (bearing: number): string => {
 };
 
 /**
- * Requests device orientation permission
+ * Requests device orientation and motion permissions (iOS 13+ requires both)
  */
 export const requestOrientationPermission = async (): Promise<boolean> => {
-  if (typeof DeviceOrientationEvent !== 'undefined' && 
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
       typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
     try {
-      const permission = await (DeviceOrientationEvent as any).requestPermission();
-      return permission === 'granted';
+      const orientationPermission = await (DeviceOrientationEvent as any).requestPermission();
+
+      // Also request DeviceMotionEvent permission on iOS — some versions
+      // require both for webkitCompassHeading to be populated.
+      if (typeof DeviceMotionEvent !== 'undefined' &&
+          typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+        try {
+          await (DeviceMotionEvent as any).requestPermission();
+        } catch {
+          // Non-critical: continue even if motion permission fails
+        }
+      }
+
+      return orientationPermission === 'granted';
     } catch (err) {
       console.error('Error requesting device orientation permission:', err);
       return false;
