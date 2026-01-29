@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { calculateBearing, getCardinalDirection } from '@/utils/compassUtils';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
@@ -13,11 +13,13 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
   const [deviceOrientation, setDeviceOrientation] = useState(0);
   const [hasOrientationSupport, setHasOrientationSupport] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const listenersAttached = useRef(false);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   // Check for orientation support on mount
   useEffect(() => {
     const checkOrientationSupport = () => {
-      if (typeof DeviceOrientationEvent !== 'undefined' && 
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
           typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
         setHasOrientationSupport(true);
         return;
@@ -42,52 +44,16 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
     setBearing(newBearing);
   }, [userLocation, issLocation]);
 
-  // Request device orientation permission
-  const requestPermission = async () => {
-    console.log("Requesting orientation permission...");
+  // Attach orientation event listeners (deduplicated via ref)
+  const attachListeners = useCallback(() => {
+    if (listenersAttached.current) return;
+    listenersAttached.current = true;
 
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      try {
-        const permission = await (DeviceOrientationEvent as any).requestPermission();
-        if (permission === 'granted') {
-          console.log("Permission granted");
-          setPermissionGranted(true);
-        } else {
-          toast({
-            title: "Permission Denied",
-            description: "Please enable motion sensors in your device settings.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Error requesting permission:", error);
-        toast({
-          title: "Permission Error",
-          description: "An error occurred requesting permissions.",
-          variant: "destructive",
-        });
-      }
-    } else if ('DeviceOrientationEvent' in window) {
-      // No permission needed
-      setPermissionGranted(true);
-    } else {
-      toast({
-        title: "Not Supported",
-        description: "Your device doesn't support orientation tracking.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Setup orientation tracking when permission is granted
-  useEffect(() => {
-    if (!permissionGranted) return;
-
-    console.log("Setting up orientation listener...");
+    console.log("Setting up orientation listeners...");
 
     const handleOrientation = (event: DeviceOrientationEvent) => {
       const webkitEvent = event as DeviceOrientationEvent & { webkitCompassHeading?: number };
-      
+
       // Log every 10th event to avoid spam
       if (Math.random() < 0.1) {
         console.log("Orientation event:", {
@@ -102,10 +68,8 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
         setDeviceOrientation(webkitEvent.webkitCompassHeading);
       } else if (event.alpha !== null) {
         // Android/other: convert alpha to compass heading
-        // If absolute is true, alpha is relative to true north
-        // If false, it's relative to an arbitrary direction
-        const heading = event.absolute 
-          ? (360 - event.alpha) % 360 
+        const heading = event.absolute
+          ? (360 - event.alpha) % 360
           : (360 - event.alpha) % 360;
         setDeviceOrientation(heading);
       }
@@ -114,29 +78,103 @@ const Compass = ({ userLocation, issLocation }: CompassProps) => {
     // Try absolute orientation first (more accurate), fall back to regular
     const supportsAbsolute = 'ondeviceorientationabsolute' in window;
     const eventName = supportsAbsolute ? 'deviceorientationabsolute' : 'deviceorientation';
-    
+
     console.log(`Using ${eventName} event, supportsAbsolute: ${supportsAbsolute}`);
-    
+
     window.addEventListener(eventName, handleOrientation as EventListener);
-    
-    // Also try regular deviceorientation as fallback
+
+    // Also listen to regular deviceorientation as fallback
     if (supportsAbsolute) {
       window.addEventListener('deviceorientation', handleOrientation);
     }
-    
+
     toast({
       title: "Orientation Active",
       description: "Rotate your phone to point toward the ISS.",
     });
 
-    return () => {
+    cleanupRef.current = () => {
       console.log("Removing orientation listeners");
       window.removeEventListener(eventName, handleOrientation as EventListener);
       if (supportsAbsolute) {
         window.removeEventListener('deviceorientation', handleOrientation);
       }
+      listenersAttached.current = false;
     };
-  }, [permissionGranted]);
+  }, []);
+
+  // Request device orientation permission (iOS 13+ requires user gesture)
+  const requestPermission = async () => {
+    console.log("Requesting orientation permission...");
+
+    try {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        // iOS 13+: request DeviceOrientationEvent permission
+        const orientationPermission = await (DeviceOrientationEvent as any).requestPermission();
+        console.log("Orientation permission result:", orientationPermission);
+
+        // iOS also requires DeviceMotionEvent permission for full sensor access.
+        // Some iOS versions need both granted for webkitCompassHeading to work.
+        if (typeof DeviceMotionEvent !== 'undefined' &&
+            typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+          try {
+            const motionPermission = await (DeviceMotionEvent as any).requestPermission();
+            console.log("Motion permission result:", motionPermission);
+          } catch (motionError) {
+            // Continue even if motion permission fails; orientation is the critical one
+            console.warn("Motion permission request failed:", motionError);
+          }
+        }
+
+        if (orientationPermission === 'granted') {
+          console.log("Permission granted, attaching listeners in gesture context");
+          // Attach listeners immediately within the user gesture call stack.
+          // iOS Safari may ignore listeners added outside the gesture that
+          // triggered requestPermission().
+          attachListeners();
+          setPermissionGranted(true);
+        } else {
+          toast({
+            title: "Permission Denied",
+            description: "Please enable motion & orientation access in Settings > Safari > Motion & Orientation Access.",
+            variant: "destructive",
+          });
+        }
+      } else if ('DeviceOrientationEvent' in window) {
+        // Non-iOS browsers: no permission needed
+        attachListeners();
+        setPermissionGranted(true);
+      } else {
+        toast({
+          title: "Not Supported",
+          description: "Your device doesn't support orientation tracking.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error requesting permission:", error);
+      toast({
+        title: "Permission Error",
+        description: "Could not request sensor permissions. Ensure you are using HTTPS and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fallback: if permissionGranted was set but listeners weren't attached yet
+  // (e.g. hot-reload or state restored), set them up via effect.
+  useEffect(() => {
+    if (permissionGranted && !listenersAttached.current) {
+      attachListeners();
+    }
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+    };
+  }, [permissionGranted, attachListeners]);
 
   // Calculate the final rotation including device orientation
   const finalRotation = permissionGranted
